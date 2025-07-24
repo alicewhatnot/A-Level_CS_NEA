@@ -8,4 +8,6 @@ SUBROUTINE tokenize(user_function):
     
         token_array.append((token, character))
 
-    
+#Add Comments!
+#Also continue with adding types of token
+#And research how regex works
