@@ -1,0 +1,67 @@
+CLASS Transformation
+// Transformation class, created at runtime for each transformation
+    ATTRIBUTES
+        PUBLIC type : STRING
+        PUBLIC value : INTEGER OR BOOLEAN
+        PUBLIC axis : CHARACTER
+    ENDATTRIBUTES
+
+    CONSTRUCTOR Transformation(transform_type, transform_value, transform_axis)
+        type ← transform_type
+        value ← transform_value
+        axis ← transform_axis
+    ENDCONSTRUCTOR
+ENDCLASS
+
+CLASS TransformationQueue
+    ATTRIBUTES
+        PRIVATE items : ARRAY
+        PRIVATE front : INTEGER
+        PRIVATE rear : INTEGER
+        PRIVATE size : INTEGER
+        PRIVATE max_size : INTEGER
+    ENDATTRIBUTES
+
+    CONSTRUCTOR TransformationQueue()
+        items ← []
+        front ← 0
+        rear ← -1
+        size ← 0
+        // Max size is according to the fact there will only be maximum 6 transformations under correct operation
+        max_size ← 6
+    ENDCONSTRUCTOR
+
+    PUBLIC METHOD ENQUEUE(type, value, axis)
+    // Adds transformations to the queue
+    // If overflow occurs, a problem has occurred as there are more transformations than expected
+        IF IS_FULL() THEN
+            PRINT("Queue Overflow")
+            RETURN
+        ENDIF
+
+        rear ← (rear + 1) MOD max_size
+        transformation ← NEW Transformation(type, value, axis)
+        items[rear] ← transformation
+        size ← size + 1
+    ENDMETHOD
+
+    PUBLIC METHOD DEQUEUE()
+        // Returns the transformation at the front of the queue for graphing
+        IF IS_EMPTY() THEN
+            RETURN NULL
+        ENDIF
+
+        item ← items[front]
+        front ← (front + 1) MOD max_size
+        size ← size - 1
+        RETURN item  
+    END METHOD
+
+    PUBLIC METHOD IS_EMPTY()
+        RETURN front = rear
+    END METHOD
+
+    PUBLIC METHOD IS_FULL()
+        RETURN size = max_size
+    ENDMETHOD
+ENDCLASS

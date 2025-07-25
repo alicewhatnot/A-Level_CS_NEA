@@ -1,0 +1,66 @@
+SUBROUTINE tokenize(expression)
+    // Initialise variables and clean the expression
+    tokens ← []
+    index ← 0
+    valid_characters ← TRUE
+    REMOVE all spaces from expression
+    REPLACE_ALL(expression, "^", "**")
+
+    // Regex patterns to look for in the expression
+    patterns ← (
+    NUMBER: digit followed by optional . followed by digit OR
+    NAME: any letter from a–z or A–Z OR
+    OP: one of '+', '-', '*', '/', '**' OR
+    LEFTPARENTHESIS: '(' OR
+    RIGHTPARENTHESIS: ')'
+    )
+
+ 
+    // Loop through the expression, adding characters and corresponding token to tokens list
+    WHILE index < LEN(expression) AND validCharacters = TRUE
+        matched ← FALSE
+
+        IF expression[index TO ...] matches NUMBER pattern THEN
+            token ← "NUMBER"
+            characters ← matched substring
+            matched ← TRUE
+
+        ELSE IF expression[index TO ...] matches NAME pattern THEN
+            token ← "NAME"
+            characters ← matched substring
+            matched ← TRUE
+
+        ELSE IF expression[index] IN ['+', '-', '*', '/', '**'] THEN
+            token ← "OP"
+            characters ← expression[index]
+            matched ← TRUE
+
+        ELSE IF expression[index] = '(' THEN
+            token ← "LEFTPARENTHESIS"
+            characters ← expression[index]
+            matched ← TRUE
+
+        ELSE IF expression[index] = ')' THEN
+            token ← "RIGHTPARENTHESIS"
+            characters ← expression[index]
+            matched ← TRUE
+
+        ELSE
+            valid_characters ← FALSE
+        ENDIF
+    
+        // Add the token and characters to the list, incrementing index according to amount of characters
+        IF matched THEN
+            tokens.APPEND((token, characters))
+            index ← index + LEN(characters)
+    ENDWHILE
+
+    // Only returns token list if all characters are valid
+    IF valid_characters THEN
+        RETURN tokens
+    ELSE
+        RETURN NULL
+    ENDIF
+ENDSUBROUTINE
+
+
