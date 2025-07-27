@@ -36,7 +36,10 @@ SUBROUTINE tokenize(expression)
             characters ← expression[index]
             matched ← TRUE
 
+        // Checking for operators must take into account that only one operator is double length
         ELSE IF expression[index] matches OP pattern THEN
+            IF expression[index] = * AND expression[index + 1] = * THEN
+                characters ← '**'
             token ← "OP"
             characters ← expression[index]
             matched ← TRUE

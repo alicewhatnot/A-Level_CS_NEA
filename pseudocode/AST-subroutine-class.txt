@@ -1,0 +1,31 @@
+CLASS ASTNode
+    ATTRIBUTES
+        PUBLIC type :  STRING    
+        PUBLIC value : STRING      
+        PUBLIC left : OBJECT / NULL       
+        PUBLIC right : OBJECT / NULL
+    ENDATTRIBUTES
+
+    CONSTRUCTOR ASTNode(node_type, node_value, left_node, right_node)
+        type ← node_type
+        value ← node_value
+        left ← left_node
+        right ← right_node
+    ENDCONSTRUCTOR
+ENDCLASS
+
+SUBROUTINE buildAST(tokens)
+    postfix_queue ← []
+    operator_stack ← []
+
+    precedence ← DICTIONARY {
+        "+": 1, "-": 1, "*": 2, "/": 2, "**": 3
+    }
+
+    associativity ← DICTIONARY {
+        "+": "L", "-": "L", "*": "L", "/": "L", "**": "R"
+    }
+
+MAKE USE OF THE TRANSFORMATION QUEUE AND MODIFY IT SO THAT ITS BUILT TO INTERFACE NOT IMPLEMENTATION
+
+ALSO GPT IS USING ONE SUBROUTINE FOR BOTH POSTFIXING AND AST TREEING PLEASE MAKE IT TWO SUBROUTINES
