@@ -1,17 +1,75 @@
-        *
-       / \
-      5   **
-          / \
-         x   3
+SUBROUTINE differentiate(node)
+    IF node = NULL THEN
+        RETURN NULL
 
-// For this tree youd multiply the 5 by 3 then remove 1 from 3
+    // Returns the derivative of a number which is 0
+    ELSE IF node.type = "NUMBER" THEN
+        RETURN NEW ASTNode("NUMBER", "0", NULL, NULL)
 
-     *
-    / \
-   2   sin
-        |
-        x
+    // Returns the derivative of a single variable which is 1
+    ELSE IF node.type = "NAME" THEN
+        RETURN NEW ASTNode("NUMBER", "1", NULL, NULL)
 
-// Sin goes to cos and 2*f'(x) = 2
+    ELSE IF node.type = "OP" THEN
+        operator ← node.value
 
-remember to stop the user from entering 5^x in differentiation mode because we cant do that
+        // Differentiates left and right of the operator, using the rule d/dx[f ± g] = f' ± g'
+        IF operator = "+" OR operator = "-" THEN
+            left_differentiated ← differentiate(node.left) 
+            right_differentiated ← differentiate(node.right) 
+            RETURN NEW ASTNode("OP", operator, left_differentiated, right_differentiated)
+
+        ELSE IF operator = "*" THEN
+        // Implements the product rule (d/dx[fg] = f'g + fg') to differentiate left * right
+            left ← node.left
+            right ← node.right
+            left_differentiated ← differentiate(node.left)
+            right_differentiated ← differentiate(node.right)
+
+            term1 ← NEW ASTNode("OP", "*", left_differentiated, right)
+            term2 ← NEW ASTNode("OP", "*", right_differentiated, left)
+            RETURN NEW ASTNode("OP", "+", term1, term2)
+
+        ELSE IF operator = "**" THEN
+        // Implements the power rule (d/dx[u^n] = n * u^(n-1) * u') to differentiate a base to a numerical exponent
+            base ← node.left
+            exponent ← node.right
+
+            IF exponent.type = "NUMBER" THEN
+                new_exponent ← NEW ASTNode("NUMBER", STRING(INT(exponent.value) - 1), NULL, NULL)
+                base_differentiated ← differentiate(base)
+
+                value_to_power ← NEW ASTNode("OP", "**", base, new_exponent)
+                coefficient ← NEW ASTNode("NUMBER", exponent.value, NULL, NULL)
+                product ← NEW ASTNode("OP", "*", coefficient, value_to_power)
+                RETURN NEW ASTNode("OP", "*", product, base_differentiated)
+            
+            ELSE
+                // Implementing the rule of a base to a non-numerical exponent is unecessary and out of the scope of the project
+                RETURN NULL
+            ENDIF
+        ENDIF
+    
+    // Differentiates a function using the chain rule (d/dx[f(g)] = f'g')
+    ELSE IF node.type = "FUNCTION" THEN
+        function ← node.value
+        argument ← node.left
+        argument_differentiated ← differentiate(argument)
+
+        // Uses the chain rule for the cases of sin and cos 
+        IF function = "sin" THEN
+            cos_node ← NEW ASTNode("FUNCTION", "cos", argument, NULL)
+            RETURN NEW ASTNode("OP", "*", cos_node, argument_differentiated)
+
+        ELSE IF function = "cos" THEN
+            sin_node ← NEW ASTNode("FUNCTION", "sin", argument, NULL)
+            negative ← NEW ASTNode("NUMBER", "-1", NULL, NULL)
+            negative_sin ← NEW ASTNode("OP", "*", sin_node, negative)
+            RETURN NEW ASTNode("OP", "*", negative_sin, argument_differentiated)
+        ENDIF
+        // differentiating tan is out of the scope of the project and so will be unimplemented
+    ENDIF
+
+    // Safety catch if the node cannot be differentiated
+    RETURN NULL
+ENDSUBROUTINE
