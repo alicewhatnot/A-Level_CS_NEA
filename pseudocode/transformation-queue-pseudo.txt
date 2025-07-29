@@ -13,7 +13,7 @@ CLASS Transformation
     ENDCONSTRUCTOR
 ENDCLASS
 
-CLASS TransformationQueue
+CLASS Queue
     ATTRIBUTES
         PRIVATE items : ARRAY
         PRIVATE front : INTEGER
@@ -22,18 +22,17 @@ CLASS TransformationQueue
         PRIVATE max_size : INTEGER
     ENDATTRIBUTES
 
-    CONSTRUCTOR TransformationQueue()
+    CONSTRUCTOR Queue(max)
         items ← []
         front ← 0
         rear ← -1
         size ← 0
-        // Max size is according to the fact there will only be maximum 6 transformations under correct operation
-        max_size ← 6
+        max_size ← max
     ENDCONSTRUCTOR
 
-    PUBLIC METHOD ENQUEUE(type, value, axis)
+    PUBLIC METHOD ENQUEUEOBJECT(type, value, axis)
     // Adds transformations to the queue
-    // If overflow occurs, a problem has occurred as there are more transformations than expected
+    // If overflow occurs, a problem has occurred 
         IF IS_FULL() THEN
             PRINT("Queue Overflow")
             RETURN
@@ -42,6 +41,17 @@ CLASS TransformationQueue
         rear ← (rear + 1) MOD max_size
         transformation ← NEW Transformation(type, value, axis)
         items[rear] ← transformation
+        size ← size + 1
+    ENDMETHOD
+
+    PUBLIC METHOD ENQUEUE(value)
+        IF IS_FULL() THEN
+            PRINT("Queue Overflow")
+            RETURN
+        ENDIF
+
+        rear ← (rear + 1) MOD max_size
+        items[rear] ← value
         size ← size + 1
     ENDMETHOD
 

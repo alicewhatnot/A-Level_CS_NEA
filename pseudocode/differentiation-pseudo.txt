@@ -1,0 +1,17 @@
+        *
+       / \
+      5   **
+          / \
+         x   3
+
+// For this tree youd multiply the 5 by 3 then remove 1 from 3
+
+     *
+    / \
+   2   sin
+        |
+        x
+
+// Sin goes to cos and 2*f'(x) = 2
+
+remember to stop the user from entering 5^x in differentiation mode because we cant do that

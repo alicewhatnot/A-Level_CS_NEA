@@ -1,4 +1,5 @@
 CLASS ASTNode
+// Class to create each node of the tree as an object
     ATTRIBUTES
         PUBLIC type :  STRING    
         PUBLIC value : STRING      
@@ -14,10 +15,12 @@ CLASS ASTNode
     ENDCONSTRUCTOR
 ENDCLASS
 
-SUBROUTINE buildAST(tokens)
-    postfix_queue ← []
-    operator_stack ← []
+SUBROUTINE postfix(tokens)
+    // Initialising variables and dictionaries
+    postfix_queue ← Queue(64)
+    operator_stack ← Stack(64)
 
+    // These control the BIDMAS operations
     precedence ← DICTIONARY {
         "+": 1, "-": 1, "*": 2, "/": 2, "**": 3
     }
@@ -26,6 +29,83 @@ SUBROUTINE buildAST(tokens)
         "+": "L", "-": "L", "*": "L", "/": "L", "**": "R"
     }
 
-MAKE USE OF THE TRANSFORMATION QUEUE AND MODIFY IT SO THAT ITS BUILT TO INTERFACE NOT IMPLEMENTATION
+    FOR index ← 1 TO LEN(tokens)
+        token ← tokens[index, 1]
+        value ← tokens[index, 2]
 
-ALSO GPT IS USING ONE SUBROUTINE FOR BOTH POSTFIXING AND AST TREEING PLEASE MAKE IT TWO SUBROUTINES
+        // Adds a number or variable straight to the queue
+        IF token = "NUMBER" OR token = "NAME" THEN
+            postfix_queue.ENQUEUE((token, value))
+        
+        // Adds function straight to the stack as it has highest precedence
+        ELSE IF token = "FUNCTION" THEN
+            operator_stack.PUSH((token, value))
+
+        // Checking to see if the precedence of the item at the top of the stack is higher or lower than current
+        ELSE IF token = "OP" THEN
+            WHILE NOT operator_stack.EMPTY() AND (
+                (associativity[value] = "L" AND precedence[value] <= precedence[operator_stack.TOP()[2]]) OR
+                (associativity[value] = "R" AND precedence[value] < precedence[operator_stack.TOP()[2]])  
+            )
+                postfix_queue.ENQUEUE(operator_stack.POP())
+            ENDWHILE
+            operator_stack.PUSH((token, value))
+
+        // Add bracket to the stack waiting for the other of the pair
+        ELSE IF token = "LEFTPARENTHESIS" THEN
+            operator_stack.PUSH((token, value))
+
+        ELSE IF token = "RIGHTPARENTHESIS" THEN
+            WHILE operator_stack.TOP()[2] <> "("
+                // Add all operations to the queue that were within the brackets
+                postfix_queue.ENQUEUE(operator_stack.POP())
+            ENDWHILE
+            // Remove the bracket
+            operator_stack.POP()
+            IF NOT operator_stack.EMPTY() AND operator_stack.TOP()[1] = "FUNCTION" THEN
+                postfix_queue.ENQUEUE(operator_stack.POP())
+            ENDIF
+        ENDIF
+    ENDFOR
+
+    // Lastly check if any operators are still in the stack
+    WHILE NOT operator_stack.EMPTY()
+        postfix_queue.ENQUEUE(operator_stack.POP())
+    ENDWHILE
+
+    RETURN postfix_queue
+ENDSUBROUTINE
+
+SUBROUTINE postfixToAST(postfix_queue)
+    // Creates an AST from the ASTNodes class defined earlier
+
+    // Postfix creation has allowed the use of a stack to create the tree
+    node_stack ← Stack()
+
+    FOR item ← 1 TO LEN(postfix_queue)
+        token ← postfix_queue[item, 1]
+        value ← postfix_queue[item, 2]
+
+        // These will be leaves and so do not have children
+        IF token = "NUMBER" OR token = "NAME" THEN
+            node ← NEW ASTNode(token, value, NULL, NULL)
+            node_stack.PUSH(node)
+
+        // These will only have a left child
+        ELSE IF token = "FUNCTION" THEN
+            operand ← node_stack.POP()
+            node ← NEW ASTNode(token, value, operand, NULL)
+            node_stack.PUSH(node)
+        
+        // These will use both children 
+        ELSE IF token = "OP" THEN
+            right ← node_stack.POP()
+            left ← node_stack.POP()
+            node ← NEW ASTNode(token, value, left, right)
+            node_stack.PUSH(node)
+        ENDIF
+    ENDFOR
+
+    // The node that remains in the stack is the root
+    RETURN node_stack.POP()
+ENDSUBROUTINE

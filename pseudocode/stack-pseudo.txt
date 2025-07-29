@@ -1,0 +1,47 @@
+CLASS Stack
+    ATTRIBUTES
+        PRIVATE items : ARRAY
+        PRIVATE top_index : INTEGER
+        PRIVATE max_size : INTEGER
+    ENDATTRIBUTES
+
+    CONSTRUCTOR Stack(max)
+        items ← []
+        top_index ← 0
+        max_size ← max
+    ENDCONSTRUCTOR
+
+    PUBLIC METHOD PUSH(value)
+        IF top_index = max_size THEN
+            PRINT("Stack Overflow")
+            RETURN
+        ENDIF
+        top_index ← top_index + 1
+        items[top_index] ← value
+    ENDMETHOD
+
+    PUBLIC METHOD POP()
+        IF top_index = 0 THEN
+            PRINT("Stack Underflow")
+            RETURN NULL
+        ENDIF
+        value ← items[top_index]
+        top_index ← top_index - 1
+        RETURN value
+    ENDMETHOD
+
+    PUBLIC METHOD TOP()
+        IF top_index = 0 THEN
+            RETURN NULL
+        ENDIF
+        RETURN items[top_index]
+    ENDMETHOD
+
+    PUBLIC METHOD EMPTY()
+        RETURN top_index = 0
+    ENDMETHOD
+
+    PUBLIC METHOD SIZE()
+        RETURN top_index
+    ENDMETHOD
+ENDCLASS
