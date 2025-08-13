@@ -44,11 +44,97 @@ def tokenize(expression):
     else:
         return None
     
-def insert_implicit_multiplication(tokens):
-    pass
+def insertImplicitMultiplication(tokens):
+    '''Adds multiplication where the user would consider it to be implicit'''
+    #Initialise variables
+    new_tokens = []
+    length = len(tokens)
+
+    for index in range(length - 1):
+        current_token = tokens[index][0]
+        current_value = tokens[index][1]
+        next_token = tokens[index + 1][0]
+
+        new_tokens.append([current_token, current_value])
+
+        # If two relevant tokens are next to each other, insert a new '*' operator token
+        if (current_token in ["NUMBER", "NAME", "RIGHTPARENTHESIS"] and
+            next_token in ["NAME", "FUNCTION", "LEFTPARENTHESIS"]):
+            new_tokens.append(["OP", "*"])
+
+    # Add the last token
+    new_tokens.append(tokens[-1])
+
+    return new_tokens
 
 def validate_tokens(tokens):
-    pass
+    '''Checks if the order of the tokens array is valid'''
+    parenthesis_balance = 0
+    prev_token = None
+    prev_value = None
+    variable_found = False
+    variable = None
+
+    for index in range(len(tokens)):
+        token = tokens[index][0]
+        value = tokens[index][1]
+
+        # Only sets prev_token if one exists
+        if index > 0:
+            prev_token = tokens[index - 1][0]
+            prev_value = tokens[index - 1][1]
+        else:
+            prev_token = None
+            prev_value = None
+
+        # Only sets next_token if one exists
+        if index < len(tokens) - 1:
+            next_token = tokens[index + 1][0]
+        else:
+            next_token = None
+
+        # Checking for parenthesis balance
+        if token == "LEFTPARENTHESIS":
+            parenthesis_balance += 1
+        elif token == "RIGHTPARENTHESIS":
+            parenthesis_balance -= 1
+            if parenthesis_balance < 0:
+                return False
+
+        # Checking for double operators, only allows if the second is a negative
+        if prev_token == "OP" and token == "OP" and value != "-":
+            return False
+
+        # Checking if a trigonometric function is followed by a parenthesis
+        if token == "FUNCTION" and next_token != "LEFTPARENTHESIS":
+            return False
+
+        # Checks to see if there is more than one variable attempting to be created
+        if token == "NAME":
+            if not variable_found:
+                variable = value
+                variable_found = True
+            elif value != variable:
+                return False
+
+    # Final check if the last token is an operator or if the parenthesis balance is incorrect
+    if tokens[-1][0] == "OP" or parenthesis_balance != 0:
+        return False
+
+    return True
 
 def parse_expression(expression):
-    pass
+    '''Brings together the three subroutines involved in parsing the expression'''
+    tokens = tokenize(expression)
+    if tokens is None:
+        return None
+
+    tokens = insertImplicitMultiplication(tokens)
+    if not validate_tokens(tokens):
+        return None
+
+    return tokens
+
+tokens = (parse_expression("2x^3"))
+for token in tokens:
+    print(token[0], token[1])

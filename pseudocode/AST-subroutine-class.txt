@@ -82,9 +82,8 @@ SUBROUTINE postfixToAST(postfix_queue)
     // Postfix creation has allowed the use of a stack to create the tree
     node_stack ← Stack()
 
-    FOR item ← 1 TO LEN(postfix_queue)
-        token ← postfix_queue[item, 1]
-        value ← postfix_queue[item, 2]
+    WHILE NOT postfix_queue.IS_EMPTY()
+        token, value ← postfix_queue.DEQUEUE()
 
         // These will be leaves and so do not have children
         IF token = "NUMBER" OR token = "NAME" THEN
