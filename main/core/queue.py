@@ -1,4 +1,4 @@
-from core.transformation import Transformation
+from core.transformation_class import Transformation
 
 class Queue:
     def __init__(self, max_size):

@@ -42,27 +42,33 @@ SUBROUTINE enqueueTransformations(stretchX, stretchY, reflectX, reflectY, shiftX
     // Adds each transformation to the queue in the correct order if validTransformation returns true
     // Uses EVALUATE to convert an invalid entry such as 3 + 2 to 5
     // Needs to replace all ^ with ** as this is done in the parser which is unused here
-    IF validTransformation(stretchX_value, "stretch") THEN 
-        queue.ENQUEUE("stretch", EVALUATE(REPLACE_ALL(stretchX_value, "^", "**")), 'x')
+     IF validTransformation(stretchX_value, "stretch") THEN
+        transformation ← NEW Transformation("stretch", EVALUATE(REPLACE_ALL(stretchX_value, "^", "**")), 'x')
+        queue.ENQUEUE(transformation)
     ENDIF
 
-    IF validTransformation(stretchY_value, "stretch") THEN 
-        queue.ENQUEUE("stretch", EVALUATE(REPLACE_ALL(stretchY_value, "^", "**")), 'y')
+    IF validTransformation(stretchY_value, "stretch") THEN
+        transformation ← NEW Transformation("stretch", EVALUATE(REPLACE_ALL(stretchY_value, "^", "**")), 'y')
+        queue.ENQUEUE(transformation)
     ENDIF
 
-    IF validTransformation(reflectX_bool, "reflect") THEN 
-        queue.ENQUEUE("reflect", reflectX_bool, 'x')
+    IF validTransformation(reflectX_bool, "reflect") THEN
+        transformation ← NEW Transformation("reflect", reflectX_bool, 'x')
+        queue.ENQUEUE(transformation)
     ENDIF
 
-    IF validTransformation(reflectY_bool, "reflect") THEN 
-        queue.ENQUEUE("reflect", reflectY_bool, 'y')
+    IF validTransformation(reflectY_bool, "reflect") THEN
+        transformation ← NEW Transformation("reflect", reflectY_bool, 'y')
+        queue.ENQUEUE(transformation)
     ENDIF
 
-    IF validTransformation(shiftX_value, "shift") THEN 
-        queue.ENQUEUE("shift", EVALUATE(REPLACE_ALL(shiftX_value, "^", "**")), 'x')
+    IF validTransformation(shiftX_value, "shift") THEN
+        transformation ← NEW Transformation("shift", EVALUATE(REPLACE_ALL(shiftX_value, "^", "**")), 'x')
+        queue.ENQUEUE(transformation)
     ENDIF
 
-    IF validTransformation(shiftY_value, "shift") THEN 
-        queue.ENQUEUE("shift", EVALUATE(REPLACE_ALL(shiftY_value, "^", "**")), 'y')
+    IF validTransformation(shiftY_value, "shift") THEN
+        transformation ← NEW Transformation("shift", EVALUATE(REPLACE_ALL(shiftY_value, "^", "**")), 'y')
+        queue.ENQUEUE(transformation)
     ENDIF
 ENDSUBROUTINE
