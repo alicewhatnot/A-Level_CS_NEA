@@ -7,12 +7,12 @@ class ModifyFunction:
     def __init__(self, altered_function):
         self.altered_function = altered_function
 
-    def modify_function(self):
+    def modifyFunction(self):
         # Base method, should be overridden
         return self.altered_function
 
 class DifferentiateFunction(ModifyFunction):
-    def modify_function(self):
+    def modifyFunction(self):
         return differentiate(self.altered_function)
 
 class ShiftFunction(ModifyFunction):
@@ -21,7 +21,7 @@ class ShiftFunction(ModifyFunction):
         self.axis = axis
         self.value = value
 
-    def modify_function(self):
+    def modifyFunction(self):
         if self.axis == "x":
             return shiftX(self.altered_function, self.value)
         elif self.axis == "y":
@@ -34,7 +34,7 @@ class StretchFunction(ModifyFunction):
         self.axis = axis
         self.value = value
 
-    def modify_function(self):
+    def modifyFunction(self):
         if self.axis == "x":
             return stretchX(self.altered_function, self.value)
         elif self.axis == "y":
@@ -46,7 +46,7 @@ class ReflectFunction(ModifyFunction):
         super().__init__(altered_function)
         self.axis = axis
 
-    def modify_function(self):
+    def modifyFunction(self):
         if self.axis == "x":
             return reflectXAxis(self.altered_function)
         elif self.axis == "y":

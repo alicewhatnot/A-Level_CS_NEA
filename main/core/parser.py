@@ -123,7 +123,7 @@ def validateTokens(tokens):
 
     return True
 
-def parseExpression(expression):
+def parse(expression):
     '''Brings together the three subroutines involved in parsing the expression'''
     tokens = tokenize(expression)
     if tokens is None:

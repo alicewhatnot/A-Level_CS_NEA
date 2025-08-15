@@ -1,4 +1,3 @@
-from core.ast import ASTNode
 
 class Transformation:
     '''Transformation class, created at runtime for each transformation'''

@@ -1,85 +1,89 @@
-from core.parser import parse_expression
+from core.function_entry import FunctionEntry
 from core.graph_plotter import GraphPlotter
 import pygame
 import sys
 
+from settings import WIDTH, HEIGHT, BG_COLOR, SIDEBAR_COLOR, FPS
+from ui_elements import InputBox, Checkbox, Button
+from graph_ui import drawGraphArea
+
 pygame.init()
-
-# Window setup
-WIDTH, HEIGHT = 600, 200
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Input Box Example")
+pygame.display.set_caption("Function Transformation UI")
 
-# Font and colors
-font = pygame.font.SysFont(None, 36)
-color_inactive = pygame.Color('lightskyblue3')
-color_active = pygame.Color('dodgerblue2')
+# UI Elements
+function_box = InputBox(20, 20, 200, 32, "Enter function")
+submit_func_button = Button(20, 40, 160, 32, "Submit")
 
-class InputBox:
-    def __init__(self, x, y, w, h, text=''):
-        self.rect = pygame.Rect(x, y, w, h)
-        self.color = color_inactive
-        self.text = text
-        self.txt_surface = font.render(text, True, (0, 0, 0))
-        self.active = False
+x_stretch_box = InputBox(20, 70, 60, 32, "1")
+y_stretch_box = InputBox(100, 70, 60, 32, "1")
+x_shift_box = InputBox(20, 120, 60, 32, "0")
+y_shift_box = InputBox(100, 120, 60, 32, "0")
 
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            # Toggle active state if clicked
-            if self.rect.collidepoint(event.pos):
-                self.active = not self.active
-            else:
-                self.active = False
-            self.color = color_active if self.active else color_inactive
+reflect_x = Checkbox(20, 170, "Reflect X-axis")
+reflect_y = Checkbox(20, 200, "Reflect Y-axis")
 
-        elif event.type == pygame.KEYDOWN:
-            if self.active:
-                if event.key == pygame.K_RETURN:
-                    pass  # We could trigger something here
-                elif event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                else:
-                    self.text += event.unicode
-                self.txt_surface = font.render(self.text, True, (0, 0, 0))
+submit_trans_button = Button(20, 300, 200, 40, "Submit Transformations")
 
-    def draw(self, screen):
-        # Draw text
-        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
-        # Draw box
-        pygame.draw.rect(screen, self.color, self.rect, 2)
+# User Inputs
+user_function = ""
+transform_values = {"x_stretch": 1, "y_stretch": 1, "x_shift": 0, "y_shift": 0}
+reflection_values = {"reflect_x": False, "reflect_y": False}
 
-    def get_text(self):
-        return self.text
-
-# Create the input box
-input_box = InputBox(50, 50, 300, 40)
-user_input = ""  # Variable to store the user's text
-
+# Main loop 
 clock = pygame.time.Clock()
 running = True
-while running:
-    screen.fill((255, 255, 255))
 
+while running:
+    screen.fill(BG_COLOR)
+    pygame.draw.rect(screen, SIDEBAR_COLOR, (0, 0, 300, HEIGHT))
+
+    drawGraphArea(screen)
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-        input_box.handle_event(event)
+        function_box.handleEvent(event)
+        x_stretch_box.handleEvent(event)
+        y_stretch_box.handleEvent(event)
+        x_shift_box.handleEvent(event)
+        y_shift_box.handleEvent(event)
+        reflect_x.handleEvent(event)
+        reflect_y.handleEvent(event)
 
-        # Store latest user input when pressing Enter
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-            user_input = input_box.get_text()
-            try:
-                ast_tree = parse_expression(user_input)  
-                GraphPlotter.plot(ast_tree)        
-            except Exception as e:
-                print("Error parsing function:", e)
+        if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and function_box.active) or (submit_func_button.isClicked(event)):
+            user_function = function_box.getText()
+            user_function = FunctionEntry(user_function) 
+            user_function.parseFunction()
+            user_function.functionAST()
+            function_tree = user_function.outputFunction()
 
-    # Draw the input box
-    input_box.draw(screen)
+        if submit_trans_button.isClicked(event):
+            transform_values["x_stretch"] = x_stretch_box.getText()
+            transform_values["y_stretch"] = y_stretch_box.getText()
+            transform_values["x_shift"] = x_shift_box.getText()
+            transform_values["y_shift"] = y_shift_box.getText()
+            reflection_values["reflect_x"] = reflect_x.getValue()
+            reflection_values["reflect_y"] = reflect_y.getValue()
+            print("Transformations:", transform_values)
+            print("Reflections:", reflection_values)
+
+    # Draw all UI elements
+    function_box.draw(screen)
+    submit_func_button.draw(screen)
+    x_stretch_box.draw(screen)
+    y_stretch_box.draw(screen)
+    x_shift_box.draw(screen)
+    y_shift_box.draw(screen)
+    reflect_x.draw(screen)
+    reflect_y.draw(screen)
+    submit_trans_button.draw(screen)
 
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(FPS)
 
 pygame.quit()
 sys.exit()
+
+
