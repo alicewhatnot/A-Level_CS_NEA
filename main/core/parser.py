@@ -67,7 +67,7 @@ def insertImplicitMultiplication(tokens):
 
     return new_tokens
 
-def validate_tokens(tokens):
+def validateTokens(tokens):
     '''Checks if the order of the tokens array is valid'''
     parenthesis_balance = 0
     prev_token = None
@@ -123,18 +123,14 @@ def validate_tokens(tokens):
 
     return True
 
-def parse_expression(expression):
+def parseExpression(expression):
     '''Brings together the three subroutines involved in parsing the expression'''
     tokens = tokenize(expression)
     if tokens is None:
         return None
 
     tokens = insertImplicitMultiplication(tokens)
-    if not validate_tokens(tokens):
+    if not validateTokens(tokens):
         return None
 
     return tokens
-
-tokens = (parse_expression("2x^3"))
-for token in tokens:
-    print(token[0], token[1])

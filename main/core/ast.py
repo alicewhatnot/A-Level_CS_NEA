@@ -70,7 +70,7 @@ def postfix(tokens):
 
     return postfix_queue
 
-def postfix_to_ast(postfix_queue):
+def postfixToAST(postfix_queue):
     '''Creates an AST from the postfix queue using the ASTNode class'''
     node_stack = Stack(64)
 

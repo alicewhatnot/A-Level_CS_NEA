@@ -1,16 +1,12 @@
+from core.parser import parseExpression
+from core.ast import postfix, postfixToAST
+
 class FunctionEntry:
-    def __init__(self):
-        self.user_input = None
-        self.valid_function = None
-
-    def parse_expression(self):
-        pass
-
-    def identify_functions(self):
-        pass
-
-    def check_for_one_var(self):
-        pass
+    def __init__(self, user_input: str):
+        self.user_input = user_input
+        self.tokens = parseExpression(user_input)
+        self.postfix_tokens = postfix(self.tokens)
+        self.ast = postfixToAST(self.postfix_tokens)
 
     def output_function(self):
-        pass
+        return self.ast
