@@ -1,9 +1,10 @@
 from core.function_entry import FunctionEntry
 from core.graph_plotter import GraphPlotter
+from core.expression import Expression  
 import pygame
 import sys
 
-from settings import WIDTH, HEIGHT, BG_COLOR, SIDEBAR_COLOR, FPS
+from settings import WIDTH, HEIGHT, BG_COLOR, SIDEBAR_COLOR, SIDEBAR_WIDTH, FPS
 from ui_elements import InputBox, Checkbox, Button, Text
 from graph_ui import drawGraphArea
 
@@ -14,7 +15,7 @@ pygame.display.set_caption("Function Transformation UI")
 # UI Elements
 function_text = Text(20,30, "Enter Function")
 y_text = Text(20,66, "y =")
-function_box = InputBox(55, 60, 200, 40)
+function_box = InputBox(55, 60, 165, 40)
 submit_func_button = Button(230, 60, 90, 40, "Submit")
 
 in_x_axis = Text(20, 120, "X Axis")
@@ -49,12 +50,19 @@ reflection_values = {"x_reflect": False, "y_reflect": False}
 clock = pygame.time.Clock()
 running = True
 
+graph_plotter = GraphPlotter()
+
 while running:
     screen.fill(BG_COLOR)
-    pygame.draw.rect(screen, SIDEBAR_COLOR, (0, 0, 400, HEIGHT))
+    pygame.draw.rect(screen, SIDEBAR_COLOR, (0, 0, SIDEBAR_WIDTH, HEIGHT))
 
     drawGraphArea(screen)
     
+
+    if graph_plotter.current_graph is not None:
+        graph_plotter.plotSubsequent(screen, graph_plotter.current_graph)
+
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -73,6 +81,8 @@ while running:
             user_function.parseFunction()
             user_function.functionAST()
             function_tree = user_function.outputFunction()
+            expression_object = Expression(function_tree)  
+            graph_plotter.plotExpression(screen, expression_object)
 
         if submit_trans_button.isClicked(event):
             transform_values["x_stretch"] = x_stretch_box.getText()
@@ -113,5 +123,3 @@ while running:
 
 pygame.quit()
 sys.exit()
-
-

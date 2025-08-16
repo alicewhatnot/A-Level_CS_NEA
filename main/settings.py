@@ -4,6 +4,7 @@ pygame.init()
 
 # Screen
 WIDTH, HEIGHT = 900, 600
+SIDEBAR_WIDTH = 350
 
 # Font
 FONT = pygame.font.SysFont(None, 28)

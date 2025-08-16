@@ -99,3 +99,46 @@ def postfixToAST(postfix_queue):
     # The remaining node is the root of the AST
     print ("AST Created")
     return node_stack.pop()
+
+
+def evaluateAST(node, x_value):
+    '''Recursively evaluates AST for a given x-value'''
+    if node is None:
+        return None
+
+    if node.type == "NUMBER":
+        return float(node.value)
+
+    if node.type == "NAME" and node.value == "x":
+        return x_value
+
+    if node.type == "OP":
+        left = evaluateAST(node.left, x_value)
+        right = evaluateAST(node.right, x_value)
+
+        if node.value == "+":
+            return left + right
+        elif node.value == "-":
+            return left - right
+        elif node.value == "*":
+            return left * right
+        elif node.value == "/":
+            return left / right if right != 0 else None
+        elif node.value == "**":
+            return left ** right
+
+    if node.type == "FUNCTION":  # e.g. sin, cos
+        arg = evaluateAST(node.left, x_value)
+        import math
+        if node.value == "sin":
+            return math.sin(arg)
+        elif node.value == "cos":
+            return math.cos(arg)
+        elif node.value == "tan":
+            return math.tan(arg)
+        elif node.value == "exp":
+            return math.exp(arg)
+        elif node.value == "log":
+            return math.log(arg)
+    
+    return None
