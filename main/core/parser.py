@@ -126,11 +126,17 @@ def validateTokens(tokens):
 def parse(expression):
     '''Brings together the three subroutines involved in parsing the expression'''
     tokens = tokenize(expression)
-    if tokens is None:
-        return None
+    print ("Expression Tokenized")
 
+    if not tokens:  
+        return None
+    
     tokens = insertImplicitMultiplication(tokens)
+    print ("Multiplication Inserted")
+
     if not validateTokens(tokens):
+        print ("Invalid Tokens")
         return None
 
+    print ("Returning Valid Tokens")
     return tokens

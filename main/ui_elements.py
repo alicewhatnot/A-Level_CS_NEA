@@ -32,7 +32,7 @@ class InputBox:
 
 
 class Checkbox:
-    def __init__(self, x, y, label):
+    def __init__(self, x, y, label=""):
         self.rect = pygame.Rect(x, y, 20, 20)
         self.label = label
         self.checked = False
@@ -53,7 +53,7 @@ class Checkbox:
 
 
 class Button:
-    def __init__(self, x, y, w, h, text):
+    def __init__(self, x, y, w, h, text=""):
         self.rect = pygame.Rect(x, y, w, h)
         self.text = text
 
@@ -64,3 +64,14 @@ class Button:
 
     def isClicked(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
+
+class Text:
+    def __init__(self, x, y, text, color=(0, 0, 0)):
+        self.x = x
+        self.y = y
+        self.text = text
+        self.color = color
+
+    def draw(self, screen):
+        txt_surface = FONT.render(self.text, True, self.color)
+        screen.blit(txt_surface, (self.x, self.y))

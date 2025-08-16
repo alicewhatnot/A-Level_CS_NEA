@@ -68,6 +68,7 @@ def postfix(tokens):
     while not operator_stack.empty():
         postfix_queue.enqueue(operator_stack.pop())
 
+    print ("Converted To Postfix")
     return postfix_queue
 
 def postfixToAST(postfix_queue):
@@ -96,4 +97,5 @@ def postfixToAST(postfix_queue):
             node_stack.push(node)
 
     # The remaining node is the root of the AST
+    print ("AST Created")
     return node_stack.pop()
