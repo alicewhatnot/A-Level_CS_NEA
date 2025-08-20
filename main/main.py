@@ -1,6 +1,7 @@
 from core.function_entry import FunctionEntry
 from core.graph_plotter import GraphPlotter
-from core.expression import Expression  
+from core.function import Function 
+from core.transform_manager import TransformManager 
 import pygame
 import sys
 
@@ -41,16 +42,14 @@ y_reflect = Checkbox(220, 390)
 
 submit_trans_button = Button(20, 430, 300, 40, "Submit Transformations")
 
-# User Inputs
-user_function = ""
-transform_values = {"x_stretch": 1, "y_stretch": 1, "x_shift": 0, "y_shift": 0}
-reflection_values = {"x_reflect": False, "y_reflect": False}
+user_function_text = ""
 
 # Main loop 
 clock = pygame.time.Clock()
 running = True
 
 graph_plotter = GraphPlotter()
+function_entered = False
 
 while running:
     screen.fill(BG_COLOR)
@@ -58,10 +57,8 @@ while running:
 
     drawGraphArea(screen)
     
-
     if graph_plotter.current_graph is not None:
         graph_plotter.plotSubsequent(screen, graph_plotter.current_graph)
-
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -76,24 +73,28 @@ while running:
         y_reflect.handleEvent(event)
 
         if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and function_box.active) or (submit_func_button.isClicked(event)):
-            user_function = function_box.getText()
-            user_function = FunctionEntry(user_function) 
-            user_function.parseFunction()
-            user_function.functionAST()
-            function_tree = user_function.outputFunction()
-            expression_object = Expression(function_tree)  
-            graph_plotter.plotExpression(screen, expression_object)
+            user_function_text = function_box.getText()
+            user_function_entry = FunctionEntry(user_function_text) 
+            user_function_entry.parseFunction()
+            user_function_entry.functionAST()
+            function_tree = user_function_entry.outputFunction()
+            function_object = Function(function_tree)  # changed from expression_object
+            graph_plotter.plotFunction(screen, function_object)  # assuming plotExpression → plotFunction
+            function_entered = True
+            transform_manager = TransformManager(function_object)
 
-        if submit_trans_button.isClicked(event):
-            transform_values["x_stretch"] = x_stretch_box.getText()
-            transform_values["y_stretch"] = y_stretch_box.getText()
-            transform_values["x_shift"] = x_shift_box.getText()
-            transform_values["y_shift"] = y_shift_box.getText()
-            reflection_values["reflect_x"] = x_reflect.getValue()
-            reflection_values["reflect_y"] = y_reflect.getValue()
-            print("Transformations:", transform_values)
-            print("Reflections:", reflection_values)
+        if submit_trans_button.isClicked(event) and function_entered:
 
+            transform_manager.addTransformations(
+            x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
+            )
+            print ("Transformations Enqueued")
+            transform_manager.applyAllTransformations(graph_plotter, screen)
+            print ("Transformations Applied")
+
+            function_object = transform_manager.getCurrentFunction()
+
+            
     # Draw all UI elements
     function_text.draw(screen)
     y_text.draw(screen)

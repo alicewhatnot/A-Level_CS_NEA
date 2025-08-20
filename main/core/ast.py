@@ -75,7 +75,7 @@ def postfixToAST(postfix_queue):
     '''Creates an AST from the postfix queue using the ASTNode class'''
     node_stack = Stack(64)
 
-    while not postfix_queue.is_empty():
+    while not postfix_queue.isEmpty():
         token, value = postfix_queue.dequeue()
 
         # These will be leaves and so do not have children

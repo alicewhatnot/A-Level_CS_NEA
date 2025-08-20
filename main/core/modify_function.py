@@ -1,54 +1,61 @@
-from main.core.transformations import (
+from core.transformations import (
     reflectXAxis, reflectYAxis, shiftX, shiftY, stretchX, stretchY
 )
 from core.differentiation import differentiate
 
-class ModifyExpression:
-    def __init__(self, altered_expression):
-        self.altered_expression = altered_expression
+class ModifyFunction:
+    def __init__(self, altered_function):
+        self.altered_function = altered_function  # This is a Function object
 
-    def modifyExpression(self):
-        # Base method, should be overridden
-        return self.altered_expression
+    def ModifyFunction(self):
+        return self.altered_function
 
-class DifferentiateExpression(ModifyExpression):
-    def modifyExpression(self):
-        return differentiate(self.altered_expression)
+class DifferentiateExpression(ModifyFunction):
+    def ModifyFunction(self):
+        new_tree = differentiate(self.altered_function.getFunction())
+        self.altered_function.setFunction(new_tree)
+        return self.altered_function
 
-class ShiftExpression(ModifyExpression):
-    def __init__(self, altered_expression, axis, value):
-        super().__init__(altered_expression)
+class ShiftFunction(ModifyFunction):
+    def __init__(self, altered_function, axis, value):
+        super().__init__(altered_function)
         self.axis = axis
         self.value = value
 
-    def modifyExpression(self):
+    def ModifyFunction(self):
+        tree = self.altered_function.getFunction()
         if self.axis == "x":
-            return shiftX(self.altered_expression, self.value)
+            tree = shiftX(tree, self.value)
         elif self.axis == "y":
-            return shiftY(self.altered_expression, self.value)
-        return self.altered_expression
+            tree = shiftY(tree, self.value)
+        self.altered_function.setFunction(tree)
+        return self.altered_function
 
-class StretchExpression(ModifyExpression):
-    def __init__(self, altered_expression, axis, value):
-        super().__init__(altered_expression)
+class StretchFunction(ModifyFunction):
+    def __init__(self, altered_function, axis, value):
+        super().__init__(altered_function)
         self.axis = axis
         self.value = value
 
-    def modifyExpression(self):
+    def ModifyFunction(self):
+        tree = self.altered_function.getFunction()
         if self.axis == "x":
-            return stretchX(self.altered_expression, self.value)
+            tree = stretchX(tree, self.value)
         elif self.axis == "y":
-            return stretchY(self.altered_expression, self.value)
-        return self.altered_expression
+            tree = stretchY(tree, self.value)
+        self.altered_function.setFunction(tree)
+        return self.altered_function
 
-class ReflectExpression(ModifyExpression):
-    def __init__(self, altered_expression, axis):
-        super().__init__(altered_expression)
+class ReflectFunction(ModifyFunction):
+    def __init__(self, altered_function, axis):
+        super().__init__(altered_function)
         self.axis = axis
 
-    def modifyExpression(self):
+    def ModifyFunction(self):
+        tree = self.altered_function.getFunction()
         if self.axis == "x":
-            return reflectXAxis(self.altered_expression)
+            tree = reflectXAxis(tree)
         elif self.axis == "y":
-            return reflectYAxis(self.altered_expression)
-        return self.altered_expression
+            tree = reflectYAxis(tree)
+        self.altered_function.setFunction(tree)
+        return self.altered_function

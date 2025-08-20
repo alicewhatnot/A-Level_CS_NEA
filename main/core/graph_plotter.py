@@ -7,18 +7,18 @@ class GraphPlotter:
     def __init__(self):
         self.current_graph = None  
 
-    def plotExpression(self, screen, expression_object):
-        """Plots the initial expression (replaces current graph)."""
-        self.current_graph = expression_object
-        self._draw_expression(screen, expression_object)
+    def plotFunction(self, screen, function_object):
+        """Plots the initial function (replaces current graph)."""
+        self.current_graph = function_object
+        self._draw_function(screen, function_object)
 
-    def plotSubsequent(self, screen, expression_object):
-        """Plots additional expressions (like transformations) without clearing."""
-        self._draw_expression(screen, expression_object)
+    def plotSubsequent(self, screen, function_object):
+        """Plots additional functions (like transformations) without clearing."""
+        self._draw_function(screen, function_object)
 
-    def _draw_expression(self, screen, expression_object):
-        expression_tree = expression_object.getExpression()
-        colour = expression_object.getColour()
+    def _draw_function(self, screen, function_object):
+        function_tree = function_object.getFunction()
+        colour = function_object.getColour()
 
         # Graph area
         graph_left = SIDEBAR_WIDTH
@@ -34,7 +34,7 @@ class GraphPlotter:
             scale = 40
             x_val = (px - center_x) / scale
 
-            y_val = evaluateAST(expression_tree, x_val) 
+            y_val = evaluateAST(function_tree, x_val) 
             if y_val is None:
                 continue
 
