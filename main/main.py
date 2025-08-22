@@ -50,16 +50,35 @@ running = True
 
 graph_plotter = GraphPlotter()
 function_entered = False
+current_displayed_function = None
+
+TRANSFORM_INTERVAL = 1000  # milliseconds per transformation
+last_transform_time = 0
 
 while running:
+    current_time = pygame.time.get_ticks()
+
     screen.fill(BG_COLOR)
     pygame.draw.rect(screen, SIDEBAR_COLOR, (0, 0, SIDEBAR_WIDTH, HEIGHT))
 
     drawGraphArea(screen)
-    
-    if graph_plotter.current_graph is not None:
-        graph_plotter.plotSubsequent(screen, graph_plotter.current_graph)
 
+    # Apply the next transformation every TRANSFORM_INTERVAL
+    if function_entered and transform_manager.hasTransformations():
+        if current_time - last_transform_time >= TRANSFORM_INTERVAL:
+            next_func = transform_manager.nextTransformation()
+            if next_func:
+                current_displayed_function = next_func
+            last_transform_time = current_time
+
+    # Draw functions: original + current transformation
+    if function_entered:
+        if current_displayed_function:
+            # Keep original only, remove previous transformation
+            graph_plotter.functions = [graph_plotter.functions[0]]  # keep original
+            graph_plotter.functions.append(current_displayed_function)  # add current transformation
+        graph_plotter.drawAll(screen)
+        
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -79,7 +98,7 @@ while running:
             user_function_entry.functionAST()
             function_tree = user_function_entry.outputFunction()
             function_object = Function(function_tree)  # changed from expression_object
-            graph_plotter.plotFunction(screen, function_object)  # assuming plotExpression → plotFunction
+            graph_plotter.plotFunction(function_object)  # assuming plotExpression → plotFunction
             function_entered = True
             transform_manager = TransformManager(function_object)
 
@@ -88,11 +107,7 @@ while running:
             transform_manager.addTransformations(
             x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
             )
-            print ("Transformations Enqueued")
-            transform_manager.applyAllTransformations(graph_plotter, screen)
             print ("Transformations Applied")
-
-            function_object = transform_manager.getCurrentFunction()
 
             
     # Draw all UI elements

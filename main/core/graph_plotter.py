@@ -5,42 +5,41 @@ from settings import SIDEBAR_WIDTH
 
 class GraphPlotter:
     def __init__(self):
-        self.current_graph = None  
+        self.functions = [] 
 
-    def plotFunction(self, screen, function_object):
-        """Plots the initial function (replaces current graph)."""
-        self.current_graph = function_object
-        self._draw_function(screen, function_object)
+    def plotFunction(self, function_object):
+        """Clears old graph and plots only the new user function."""
+        self.functions = [function_object]   
 
-    def plotSubsequent(self, screen, function_object):
-        """Plots additional functions (like transformations) without clearing."""
-        self._draw_function(screen, function_object)
+    def plotSubsequent(self, function_object):
+        """Adds a new transformed function without clearing."""
+        self.functions.append(function_object)
 
-    def _draw_function(self, screen, function_object):
+    def drawAll(self, screen):
+        """Draw all stored functions every frame."""
+        for function in self.functions:
+            self.drawFunction(screen, function)
+
+    def drawFunction(self, screen, function_object):
         function_tree = function_object.getFunction()
         colour = function_object.getColour()
 
-        # Graph area
         graph_left = SIDEBAR_WIDTH
         graph_width = WIDTH - SIDEBAR_WIDTH
         graph_height = HEIGHT
         center_x = graph_left + graph_width // 2
         center_y = graph_height // 2
 
+        scale = 40
         points = []
-        # loop over screen x-coords
-        for px in range(graph_left, WIDTH):  
-            # Convert screen x to mathematical x 
-            scale = 40
-            x_val = (px - center_x) / scale
 
-            y_val = evaluateAST(function_tree, x_val) 
+        for px in range(graph_left, WIDTH):
+            x_val = (px - center_x) / scale
+            y_val = evaluateAST(function_tree, x_val)
             if y_val is None:
                 continue
 
-            # Convert mathematical y to screen y
             py = center_y - int(y_val * scale)
-
             if 0 <= py <= HEIGHT:
                 points.append((px, py))
 

@@ -142,3 +142,13 @@ def evaluateAST(node, x_value):
             return math.log(arg)
     
     return None
+
+def copyAST(node):
+    if node is None:
+        return None
+    return type(node)(
+        node.type,
+        node.value,
+        copyAST(node.left),
+        copyAST(node.right)
+    )
