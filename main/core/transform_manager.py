@@ -42,9 +42,7 @@ class TransformManager:
             new_func = self.applyTransformation(transformation)
             graph_plotter.plotSubsequent(new_func)
 
-        # Clear queue
         self.transformations_queue = Queue(6)
-
 
     def getCurrentFunction(self):
         return self.current_function
@@ -60,7 +58,7 @@ class TransformManager:
         from core.function import Function
         from core.modify_function import ShiftFunction, StretchFunction, ReflectFunction
 
-        ast_copy = self.original_function.getFunction()  # use copyAST if needed
+        ast_copy = self.current_function.getFunction()  # use copyAST if needed
         new_func = Function(ast_copy)
 
         modifier = None
