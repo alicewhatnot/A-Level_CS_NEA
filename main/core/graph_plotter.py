@@ -20,9 +20,14 @@ class GraphPlotter:
         for function in self.functions:
             self.drawFunction(screen, function)
 
-    def drawFunction(self, screen, function_object):
+    def drawFunction(self, screen, function_object, color_override=None):
+        """
+        Draw a function on the screen.
+        
+        color_override: if provided, uses this color instead of function_object's color
+        """
         function_tree = function_object.getFunction()
-        colour = function_object.getColour()
+        colour = color_override or function_object.getColour()  # use override if given
 
         graph_left = SIDEBAR_WIDTH
         graph_width = WIDTH - SIDEBAR_WIDTH
@@ -38,7 +43,6 @@ class GraphPlotter:
             y_val = evaluateAST(function_tree, x_val)
             if y_val is None:
                 continue
-
             py = center_y - int(y_val * scale)
             if 0 <= py <= HEIGHT:
                 points.append((px, py))

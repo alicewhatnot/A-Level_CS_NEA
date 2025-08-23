@@ -2,6 +2,8 @@ from core.function_entry import FunctionEntry
 from core.graph_plotter import GraphPlotter
 from core.function import Function 
 from core.transform_manager import TransformManager 
+from core.animation_controller import AnimationController
+from core.queue import Queue
 import pygame
 import sys
 
@@ -15,8 +17,8 @@ pygame.display.set_caption("Function Transformation UI")
 
 # UI Elements
 function_text = Text(20,30, "Enter Function")
-y_text = Text(20,66, "y =")
-function_box = InputBox(55, 60, 165, 40)
+y_text = Text(20,66, "f(x) =")
+function_box = InputBox(70, 60, 155, 40)
 submit_func_button = Button(230, 60, 90, 40, "Submit")
 
 in_x_axis = Text(20, 120, "X Axis")
@@ -49,36 +51,21 @@ clock = pygame.time.Clock()
 running = True
 
 graph_plotter = GraphPlotter()
+animation_controller = AnimationController(graph_plotter, duration=1000)  # 1s per transformation
 function_entered = False
+previous_transformations = []
 current_displayed_function = None
 
-TRANSFORM_INTERVAL = 1000  # milliseconds per transformation
-last_transform_time = 0
-
 while running:
-    current_time = pygame.time.get_ticks()
-
     screen.fill(BG_COLOR)
     pygame.draw.rect(screen, SIDEBAR_COLOR, (0, 0, SIDEBAR_WIDTH, HEIGHT))
 
     drawGraphArea(screen)
 
-    # Apply the next transformation every TRANSFORM_INTERVAL
-    if function_entered and transform_manager.hasTransformations():
-        if current_time - last_transform_time >= TRANSFORM_INTERVAL:
-            next_func = transform_manager.nextTransformation()
-            if next_func:
-                current_displayed_function = next_func
-            last_transform_time = current_time
-
-    # Draw functions: original + current transformation
+    # If a function has been entered, update animation controller
     if function_entered:
-        if current_displayed_function:
-            # Keep original only, remove previous transformation
-            graph_plotter.functions = [graph_plotter.functions[0]]  # keep original
-            graph_plotter.functions.append(current_displayed_function)  # add current transformation
-        graph_plotter.drawAll(screen)
-        
+        animation_controller.update(screen)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -91,25 +78,60 @@ while running:
         x_reflect.handleEvent(event)
         y_reflect.handleEvent(event)
 
-        if (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and function_box.active) or (submit_func_button.isClicked(event)):
+        # Submit new function
+        if ((event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and function_box.active) 
+            or submit_func_button.isClicked(event)):
+
             user_function_text = function_box.getText()
             user_function_entry = FunctionEntry(user_function_text) 
             user_function_entry.parseFunction()
             user_function_entry.functionAST()
             function_tree = user_function_entry.outputFunction()
-            function_object = Function(function_tree)  # changed from expression_object
-            graph_plotter.plotFunction(function_object)  # assuming plotExpression → plotFunction
-            function_entered = True
-            transform_manager = TransformManager(function_object)
+            function_object = Function(function_tree)
 
+            graph_plotter.plotFunction(function_object)  
+            function_entered = True
+            current_displayed_function = function_object
+
+            # Reset managers
+            transform_manager = TransformManager(function_object)
+            animation_controller.queue.clear()
+            animation_controller.animating = False
+            animation_controller.current_function = None
+            previous_transformations = None  
+
+        # Submit transformations
         if submit_trans_button.isClicked(event) and function_entered:
 
-            transform_manager.addTransformations(
-            x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
+            current_transforms = (
+                x_stretch_box.getText(),
+                y_stretch_box.getText(),
+                x_shift_box.getText(),
+                y_shift_box.getText(),
+                x_reflect.checked,
+                y_reflect.checked
             )
-            print ("Transformations Applied")
 
-            
+            if current_transforms != previous_transformations:
+
+                animation_controller.queue.clear()
+                animation_controller.animating = False
+                animation_controller.current_function = None
+
+                transform_manager.addTransformations(
+                    x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
+                )
+
+                previous_transformations = current_transforms
+
+                # enqueue raw Transformation objects, not Functions
+                while not transform_manager.transformations_queue.isEmpty():
+                    transformation = transform_manager.transformations_queue.dequeue()
+                    animation_controller.enqueueAnimation(transformation)
+
+                print("Transformations queued for animation")
+
+
     # Draw all UI elements
     function_text.draw(screen)
     y_text.draw(screen)
