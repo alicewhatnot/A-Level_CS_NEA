@@ -15,25 +15,44 @@ class GraphPlotter:
         """Adds a new transformed function without clearing."""
         self.functions.append(function_object)
 
-    def drawAll(self, screen):
-        """Draw all stored functions every frame."""
-        for function in self.functions:
-            self.drawFunction(screen, function)
+    def drawAll(self, screen, dual_view=False, derivative_function=None):
+        if not dual_view:
+            # Normal mode: single graph
+            for function in self.functions:
+                self.drawFunction(screen, function)
+        else:
+            # Dual view: split vertically
+            graph_left = SIDEBAR_WIDTH
+            graph_width = WIDTH - SIDEBAR_WIDTH
+            graph_height = HEIGHT // 2  # half height for each plot
+            center_x = graph_left + graph_width // 2
 
-    def drawFunction(self, screen, function_object, color_override=None):
-        """
-        Draw a function on the screen.
-        
-        color_override: if provided, uses this color instead of function_object's color
-        """
+            # --- Top: Original function ---
+            for function in self.functions:
+                self.drawFunction(
+                    screen, function,
+                    y_offset=0, graph_height=graph_height
+                )
+
+            # --- Bottom: Derivative function ---
+            if derivative_function:
+                self.drawFunction(
+                    screen, derivative_function,
+                    y_offset=graph_height, graph_height=graph_height
+                )
+
+    def drawFunction(self, screen, function_object, color_override=None, y_offset=0, graph_height=None):
+
+        if graph_height is None:
+            graph_height = HEIGHT
+
         function_tree = function_object.getFunction()
-        colour = color_override or function_object.getColour()  # use override if given
+        colour = color_override or function_object.getColour()
 
         graph_left = SIDEBAR_WIDTH
         graph_width = WIDTH - SIDEBAR_WIDTH
-        graph_height = HEIGHT
         center_x = graph_left + graph_width // 2
-        center_y = graph_height // 2
+        center_y = y_offset + graph_height // 2 
 
         scale = 40
         points = []
@@ -44,7 +63,7 @@ class GraphPlotter:
             if y_val is None:
                 continue
             py = center_y - int(y_val * scale)
-            if 0 <= py <= HEIGHT:
+            if y_offset <= py <= y_offset + graph_height:
                 points.append((px, py))
 
         if len(points) > 1:

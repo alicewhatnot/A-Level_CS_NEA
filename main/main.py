@@ -21,6 +21,8 @@ y_text = Text(20,66, "f(x) =")
 function_box = InputBox(70, 60, 155, 40)
 submit_func_button = Button(230, 60, 90, 40, "Submit")
 
+differentiate_button = Button(20, 120, 140, 32, "Differentiate")
+
 in_x_axis = Text(20, 120, "X Axis")
 x_stretch_text = Text(20, 150, "Stretch scale factor")
 x_stretch_box = InputBox(220, 145, 32, 32, "1")
@@ -46,6 +48,9 @@ submit_trans_button = Button(20, 430, 300, 40, "Submit Transformations")
 
 user_function_text = ""
 
+transformation_tab_button = Button(20, HEIGHT - 60, 140, 40, "Transform")
+differentiation_tab_button = Button(180, HEIGHT - 60, 140, 40, "Differentiate")
+
 # Main loop 
 clock = pygame.time.Clock()
 running = True
@@ -53,6 +58,7 @@ running = True
 graph_plotter = GraphPlotter()
 animation_controller = AnimationController(graph_plotter, duration=1000)  # 1s per transformation
 function_entered = False
+current_tab = "transformations"
 previous_transformations = []
 current_displayed_function = None
 
@@ -60,11 +66,15 @@ while running:
     screen.fill(BG_COLOR)
     pygame.draw.rect(screen, SIDEBAR_COLOR, (0, 0, SIDEBAR_WIDTH, HEIGHT))
 
-    drawGraphArea(screen)
+    if current_tab == "differentiation":
+        drawGraphArea(screen, dual_view=True)
+    else:
+        drawGraphArea(screen, dual_view=False)
 
     # If a function has been entered, update animation controller
     if function_entered:
-        animation_controller.update(screen)
+        dual_view = (current_tab == "differentiation")
+        animation_controller.update(screen, dual_view=dual_view)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -131,30 +141,59 @@ while running:
 
                 print("Transformations queued for animation")
 
+        if differentiate_button.isClicked(event) and function_entered:
+            transform_manager.addDifferentiation()
+
+            # clear old animations
+            animation_controller.queue.clear()
+            animation_controller.animating = False
+            animation_controller.current_function = None
+
+            # enqueue the differentiation
+            while not transform_manager.transformations_queue.isEmpty():
+                transformation = transform_manager.transformations_queue.dequeue()
+                animation_controller.enqueueAnimation(transformation)
+
+            print("Differentiation queued for animation")
+
+        if transformation_tab_button.isClicked(event):
+            current_tab = "transformations"
+
+        if differentiation_tab_button.isClicked(event):
+            current_tab = "differentiation"
 
     # Draw all UI elements
+    
     function_text.draw(screen)
     y_text.draw(screen)
     function_box.draw(screen)
     submit_func_button.draw(screen)
 
-    in_x_axis.draw(screen)
-    x_stretch_text.draw(screen)
-    x_stretch_box.draw(screen)
-    x_shift_text.draw(screen)
-    x_shift_box.draw(screen)
-    x_reflect_text.draw(screen)
-    x_reflect.draw(screen)
+    if current_tab == "transformations":
+        in_x_axis.draw(screen)
+        x_stretch_text.draw(screen)
+        x_stretch_box.draw(screen)
+        x_shift_text.draw(screen)
+        x_shift_box.draw(screen)
+        x_reflect_text.draw(screen)
+        x_reflect.draw(screen)
 
-    in_y_axis.draw(screen)
-    y_stretch_text.draw(screen)
-    y_stretch_box.draw(screen)
-    y_shift_text.draw(screen)
-    y_shift_box.draw(screen)
-    y_reflect_text.draw(screen)
-    y_reflect.draw(screen)
+        in_y_axis.draw(screen)
+        y_stretch_text.draw(screen)
+        y_stretch_box.draw(screen)
+        y_shift_text.draw(screen)
+        y_shift_box.draw(screen)
+        y_reflect_text.draw(screen)
+        y_reflect.draw(screen)
 
-    submit_trans_button.draw(screen)
+        submit_trans_button.draw(screen)
+
+    if current_tab == "differentiation":
+        differentiate_button.draw(screen)
+    
+
+    transformation_tab_button.draw(screen)
+    differentiation_tab_button.draw(screen)
 
     pygame.display.flip()
     clock.tick(FPS)

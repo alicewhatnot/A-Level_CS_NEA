@@ -1,7 +1,7 @@
 from core.modify_function import (
-    ReflectFunction, ShiftFunction, StretchFunction
+    ReflectFunction, ShiftFunction, StretchFunction, DifferentiateFunction
 )
-from core.transformations_entry import enqueueTransformations
+from core.transformations_entry import enqueueTransformations, enqueueDifferentiation
 from core.queue import Queue
 from core.function import Function 
 from core.ast import copyAST
@@ -18,6 +18,9 @@ class TransformManager:
             x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
         )
 
+    def addDifferentiation(self):
+        self.transformations_queue = enqueueDifferentiation()
+
     def applyTransformation(self, transformation):
         ast_copy = copyAST(self.current_function.getFunction())
         new_function = Function(ast_copy)
@@ -29,13 +32,13 @@ class TransformManager:
             modifier = StretchFunction(new_function, transformation.axis, transformation.value)
         elif transformation.type == "reflect":
             modifier = ReflectFunction(new_function, transformation.axis)
-
+        elif transformation.type == "differentiate":
+            modifier = DifferentiateFunction(new_function)
         if modifier:
             transformed_function = modifier.ModifyFunction()
             self.current_function = transformed_function  # update for next transformation
             return transformed_function
 
-        
     def applyAllTransformations(self, graph_plotter):
         while not self.transformations_queue.isEmpty():
             transformation = self.transformations_queue.dequeue()
@@ -54,11 +57,8 @@ class TransformManager:
         
         transformation = self.transformations_queue.dequeue()
 
-        # Make a fresh copy of the original AST each time
-        from core.function import Function
-        from core.modify_function import ShiftFunction, StretchFunction, ReflectFunction
-
-        ast_copy = self.current_function.getFunction()  # use copyAST if needed
+        # Always work on a fresh AST copy
+        ast_copy = copyAST(self.current_function.getFunction())
         new_func = Function(ast_copy)
 
         modifier = None
@@ -68,6 +68,8 @@ class TransformManager:
             modifier = StretchFunction(new_func, transformation.axis, transformation.value)
         elif transformation.type == "reflect":
             modifier = ReflectFunction(new_func, transformation.axis)
+        elif transformation.type == "differentiate":
+            modifier = DifferentiateFunction(new_func)
 
         if modifier:
             self.current_function = modifier.ModifyFunction()

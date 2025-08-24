@@ -54,3 +54,7 @@ def enqueueTransformations(x_stretch_box, y_stretch_box, x_shift_box, y_shift_bo
 
     return transformations_queue
         
+def enqueueDifferentiation():
+    transformations_queue = Queue(1)
+    transformations_queue.enqueue(Transformation("differentiate"))
+    return transformations_queue

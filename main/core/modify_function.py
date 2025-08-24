@@ -10,7 +10,7 @@ class ModifyFunction:
     def ModifyFunction(self):
         return self.altered_function
 
-class DifferentiateExpression(ModifyFunction):
+class DifferentiateFunction(ModifyFunction):
     def ModifyFunction(self):
         new_tree = differentiate(self.altered_function.getFunction())
         self.altered_function.setFunction(new_tree)
