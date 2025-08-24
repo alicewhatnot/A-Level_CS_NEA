@@ -1,0 +1,6 @@
+# Ignore Python cache files
+main/__pycache__/
+
+# Ignore temporary drive files
+main/.tmp.drivedownload
+main/.tmp.driveupload
