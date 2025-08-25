@@ -7,7 +7,7 @@ from core.queue import Queue
 import pygame
 import sys
 
-from settings import WIDTH, HEIGHT, BG_COLOR, SIDEBAR_COLOR, SIDEBAR_WIDTH, FPS
+from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, COLOUR_INACTIVE, COLOUR_ACTIVE, COLOUR_FAIL
 from ui_elements import InputBox, Checkbox, Button, Text
 from graph_ui import drawGraphArea
 
@@ -18,31 +18,31 @@ pygame.display.set_caption("Function Transformation UI")
 # UI Elements
 function_text = Text(20,30, "Enter Function")
 y_text = Text(20,66, "f(x) =")
-function_box = InputBox(70, 60, 155, 40)
+function_box = InputBox(70, 60, 155, 40, font=MATHS_FONT)
 submit_func_button = Button(230, 60, 90, 40, "Submit")
 
 differentiate_button = Button(20, 120, 140, 32, "Differentiate")
 
 in_x_axis = Text(20, 120, "X Axis")
 x_stretch_text = Text(20, 150, "Stretch scale factor")
-x_stretch_box = InputBox(220, 145, 32, 32, "1")
+x_stretch_box = InputBox(220, 145, 32, 32, text="1", center_text=True)
 
-x_shift_text = Text(20, 190, "Shift amount")
-x_shift_box = InputBox(220, 185, 32, 32, "0")
+x_reflect_text = Text(20, 190, "Reflect X-axis")
+x_reflect = Checkbox(220, 185, 32, 32)
 
-x_reflect_text = Text(20, 230, "Reflect X-axis")
-x_reflect = Checkbox(220, 230)
+x_shift_text = Text(20, 230, "Shift amount")
+x_shift_box = InputBox(220, 225, 32, 32, text="0", center_text=True)
 
 in_y_axis = Text(20, 280, "Y Axis")
 
 y_stretch_text = Text(20, 310, "Stretch scale factor")
-y_stretch_box = InputBox(220, 305, 32, 32, "1")
+y_stretch_box = InputBox(220, 305, 32, 32, text="1", center_text=True)
 
-y_shift_text = Text(20, 350, "Shift amount")
-y_shift_box = InputBox(220, 345, 32, 32, "0")
+y_reflect_text = Text(20, 350, "Reflect Y-axis")
+y_reflect = Checkbox(220, 345, 32, 32)
 
-y_reflect_text = Text(20, 390, "Reflect Y-axis")
-y_reflect = Checkbox(220, 390)
+y_shift_text = Text(20, 390, "Shift amount")
+y_shift_box = InputBox(220, 385, 32, 32, text="0", center_text=True)
 
 submit_trans_button = Button(20, 430, 300, 40, "Submit Transformations")
 
@@ -63,8 +63,8 @@ previous_transformations = []
 current_displayed_function = None
 
 while running:
-    screen.fill(BG_COLOR)
-    pygame.draw.rect(screen, SIDEBAR_COLOR, (0, 0, SIDEBAR_WIDTH, HEIGHT))
+    screen.fill(COLOUR_BACKGROUND)
+    pygame.draw.rect(screen, COLOUR_SIDEBAR, (0, 0, SIDEBAR_WIDTH, HEIGHT))
 
     if current_tab == "differentiation":
         drawGraphArea(screen, dual_view=True)
@@ -94,21 +94,28 @@ while running:
 
             user_function_text = function_box.getText()
             user_function_entry = FunctionEntry(user_function_text) 
-            user_function_entry.parseFunction()
-            user_function_entry.functionAST()
-            function_tree = user_function_entry.outputFunction()
-            function_object = Function(function_tree)
+            success = user_function_entry.parseFunction()
 
-            graph_plotter.plotFunction(function_object)  
-            function_entered = True
-            current_displayed_function = function_object
+            if not success:
+                function_box.border_colour = COLOUR_FAIL
+            else:
+                function_box.border_colour = COLOUR_INACTIVE
 
-            # Reset managers
-            transform_manager = TransformManager(function_object)
-            animation_controller.queue.clear()
-            animation_controller.animating = False
-            animation_controller.current_function = None
-            previous_transformations = None  
+                user_function_entry.functionAST()
+                function_tree = user_function_entry.outputFunction()
+                function_object = Function(function_tree)
+
+                graph_plotter.plotFunction(function_object)  
+                function_entered = True
+                current_displayed_function = function_object
+
+                # Reset managers
+                transform_manager = TransformManager(function_object)
+                animation_controller.queue.clear()
+                animation_controller.animating = False
+                animation_controller.current_function = None
+                previous_transformations = None
+
 
         # Submit transformations
         if submit_trans_button.isClicked(event) and function_entered:

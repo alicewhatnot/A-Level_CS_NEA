@@ -10,16 +10,22 @@ class FunctionEntry:
     def parseFunction(self):
         '''Tokenise the user input string'''
         self.tokens = parse(self.user_input)
+        if not self.tokens:
+            return False  
+        return True
     
     def functionAST(self):
         '''Convert tokens to postfix then build the AST'''
         if not self.tokens:
-            raise ValueError("Token list is empty - function must be parsed")
-        self.tokens = postfix(self.tokens)
-        self.ast = postfixToAST(self.tokens)
+            print ("ValueError: Token list is empty")
+
+        else:
+            self.tokens = postfix(self.tokens)
+            self.ast = postfixToAST(self.tokens)
     
     def outputFunction(self):
         '''Return the AST'''
         if not self.ast:
-            raise ValueError("AST must be created first")
-        return self.ast
+            print ("ValueError: No AST found") 
+        else:
+            return self.ast
