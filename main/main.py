@@ -7,19 +7,20 @@ from core.queue import Queue
 import pygame
 import sys
 
-from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, COLOUR_INACTIVE, COLOUR_ACTIVE, COLOUR_FAIL
+from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, COLOUR_INACTIVE, COLOUR_FAIL
 from ui_elements import InputBox, Checkbox, Button, Text
 from graph_ui import drawGraphArea
 
 pygame.init()
+pygame.key.set_repeat(300, 50)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Function Transformation UI")
 
 # UI Elements
 function_text = Text(20,30, "Enter Function")
 y_text = Text(20,66, "f(x) =")
-function_box = InputBox(70, 60, 155, 40, font=MATHS_FONT)
-submit_func_button = Button(230, 60, 90, 40, "Submit")
+function_box = InputBox(75, 60, 155, 40, font=MATHS_FONT)
+submit_func_button = Button(235, 60, 90, 40, "Submit")
 
 differentiate_button = Button(20, 120, 140, 32, "Differentiate")
 
@@ -44,7 +45,7 @@ y_reflect = Checkbox(220, 345, 32, 32)
 y_shift_text = Text(20, 390, "Shift amount")
 y_shift_box = InputBox(220, 385, 32, 32, text="0", center_text=True)
 
-submit_trans_button = Button(20, 430, 300, 40, "Submit Transformations")
+submit_trans_button = Button(20, 430, 305, 40, "Submit Transformations")
 
 user_function_text = ""
 
@@ -102,8 +103,8 @@ while running:
                 function_box.border_colour = COLOUR_INACTIVE
 
                 user_function_entry.functionAST()
-                function_tree = user_function_entry.outputFunction()
-                function_object = Function(function_tree)
+                function_tree, function_variable = user_function_entry.outputFunction()
+                function_object = Function(function_tree, function_variable)
 
                 graph_plotter.plotFunction(function_object)  
                 function_entered = True
@@ -168,6 +169,13 @@ while running:
 
         if differentiation_tab_button.isClicked(event):
             current_tab = "differentiation"
+
+
+    mouse_pos = pygame.mouse.get_pos()
+    submit_func_button.update(mouse_pos)
+    submit_trans_button.update(mouse_pos)
+    transformation_tab_button.update(mouse_pos)
+    differentiation_tab_button.update(mouse_pos)
 
     # Draw all UI elements
     

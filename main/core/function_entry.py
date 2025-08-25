@@ -5,11 +5,12 @@ class FunctionEntry:
     def __init__(self, user_input: str):
         self.user_input = user_input
         self.tokens = []
+        self.variable = ""
         self.ast = None
 
     def parseFunction(self):
         '''Tokenise the user input string'''
-        self.tokens = parse(self.user_input)
+        self.tokens, self.variable = parse(self.user_input)
         if not self.tokens:
             return False  
         return True
@@ -28,4 +29,6 @@ class FunctionEntry:
         if not self.ast:
             print ("ValueError: No AST found") 
         else:
-            return self.ast
+            print (f"Function Variable: {self.variable}")
+            return self.ast, self.variable
+            

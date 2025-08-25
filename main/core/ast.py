@@ -101,7 +101,7 @@ def postfixToAST(postfix_queue):
     return node_stack.pop()
 
 
-def evaluateAST(node, x_value):
+def evaluateAST(node, x_value, variable):
     '''Recursively evaluates AST for a given x-value'''
     if node is None:
         return None
@@ -109,12 +109,12 @@ def evaluateAST(node, x_value):
     if node.type == "NUMBER":
         return float(node.value)
 
-    if node.type == "NAME" and node.value == "x":
+    if node.type == "NAME" and node.value == variable:
         return x_value
 
     if node.type == "OP":
-        left = evaluateAST(node.left, x_value)
-        right = evaluateAST(node.right, x_value)
+        left = evaluateAST(node.left, x_value, variable)
+        right = evaluateAST(node.right, x_value, variable)
 
         if node.value == "+":
             return left + right
@@ -128,7 +128,7 @@ def evaluateAST(node, x_value):
             return left ** right
 
     if node.type == "FUNCTION":  # e.g. sin, cos
-        arg = evaluateAST(node.left, x_value)
+        arg = evaluateAST(node.left, x_value, variable)
         import math
         if node.value == "sin":
             return math.sin(arg)

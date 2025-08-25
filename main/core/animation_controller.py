@@ -40,59 +40,64 @@ class AnimationController:
         self.animating = True
 
     def update(self, screen, dual_view=False):
-            """Update the current animation. dual_view=True forces split graph."""
-            # No animation running
-            if not self.animating:
-                if self.current_function:
-                    self.graph_plotter.drawAll(
-                        screen,
-                        dual_view=dual_view,
-                        derivative_function=self.current_function if dual_view else None
-                    )
-                else:
-                    self.graph_plotter.drawAll(screen, dual_view=dual_view)
-                return
-
-            # During animation
-            now = pygame.time.get_ticks()
-            t = (now - self.start_time) / self.duration
-
-            if t >= 1.0:
-                final_func = self._applyTransformation(self.base_function, self.transformation, 1.0)
-                self.current_function = final_func
-
-                if self.transformation.type != "differentiate":
-                    # Only add transformed function to plot in non-differentiation animations
-                    self.graph_plotter.functions = [self.graph_plotter.functions[0], final_func]
-
-                self.original_color_override = (150, 150, 150)
-                self._startNext()
-
-            # Intermediate function for animation
-            intermediate_func = self._applyTransformation(self.base_function, self.transformation, min(t, 1.0))
-
-            # Draw using dual_view flag from main loop
-            if self.transformation.type == "differentiate" or dual_view:
-                # derivative_function will appear in bottom half
+        # No animation running
+        if not self.animating:
+            if self.current_function:
                 self.graph_plotter.drawAll(
                     screen,
-                    dual_view=True,
-                    derivative_function=intermediate_func
+                    dual_view=dual_view,
+                    derivative_function=self.current_function if dual_view else None
                 )
-            else:
-                self.graph_plotter.functions = [self.graph_plotter.functions[0], intermediate_func]
+                # override the original function's color
                 self.graph_plotter.drawFunction(
                     screen,
                     self.graph_plotter.functions[0],
-                    color_override=self.original_color_override or (150, 150, 150)
+                    color_override=(150, 150, 150)
                 )
-                self.graph_plotter.drawFunction(screen, intermediate_func)
+            else:
+                self.graph_plotter.drawAll(screen, dual_view=dual_view)
+            return
+
+        # During animation
+        now = pygame.time.get_ticks()
+        t = (now - self.start_time) / self.duration
+
+        if t >= 1.0:
+            final_func = self._applyTransformation(self.base_function, self.transformation, 1.0)
+            self.current_function = final_func
+
+            if self.transformation.type != "differentiate":
+                # Only add transformed function to plot in non-differentiation animations
+                self.graph_plotter.functions = [self.graph_plotter.functions[0], final_func]
+
+            self.original_color_override = (150, 150, 150)
+            self._startNext()
+
+        # Intermediate function for animation
+        intermediate_func = self._applyTransformation(self.base_function, self.transformation, min(t, 1.0))
+
+        # Draw using dual_view flag from main loop
+        if self.transformation.type == "differentiate" or dual_view:
+            # derivative_function will appear in bottom half
+            self.graph_plotter.drawAll(
+                screen,
+                dual_view=True,
+                derivative_function=intermediate_func
+            )
+        else:
+            self.graph_plotter.functions = [self.graph_plotter.functions[0], intermediate_func]
+            self.graph_plotter.drawFunction(
+                screen,
+                self.graph_plotter.functions[0],
+                color_override=self.original_color_override or (150, 150, 150)
+            )
+            self.graph_plotter.drawFunction(screen, intermediate_func)
 
 
     def _applyTransformation(self, base_func, transformation, t):
-        """Return a Function object with transformation interpolated by t ∈ [0,1]."""
         ast_copy = copyAST(base_func.getFunction())
-        temp_func = Function(ast_copy)
+        copy_variable = base_func.function_variable
+        temp_func = Function(ast_copy, copy_variable)
 
         if transformation.type == "shift":
             interpolated_value = t * transformation.value
@@ -104,17 +109,14 @@ class AnimationController:
 
         elif transformation.type == "reflect":
             if t < 0.5:
-                return temp_func  # delay reflect until halfway
+                # intermediate unreflected state
+                return temp_func
             modifier = ReflectFunction(temp_func, transformation.axis)
 
         elif transformation.type == "differentiate":
-            # Show derivative immediately, no animation
             modifier = DifferentiateFunction(temp_func)
 
         else:
             return temp_func
-
-        return modifier.ModifyFunction()
-
 
         return modifier.ModifyFunction()

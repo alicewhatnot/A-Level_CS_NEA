@@ -42,11 +42,15 @@ class GraphPlotter:
                 )
 
     def drawFunction(self, screen, function_object, color_override=None, y_offset=0, graph_height=None):
-
         if graph_height is None:
             graph_height = HEIGHT
 
-        function_tree = function_object.getFunction()
+        # Get AST and variable once
+        output = function_object.outputFunction()
+        if output is None:
+            return
+        function_tree, variable = output
+
         colour = color_override or function_object.getColour()
 
         graph_left = SIDEBAR_WIDTH
@@ -59,7 +63,7 @@ class GraphPlotter:
 
         for px in range(graph_left, WIDTH):
             x_val = (px - center_x) / scale
-            y_val = evaluateAST(function_tree, x_val)
+            y_val = evaluateAST(function_tree, x_val, variable)
             if y_val is None:
                 continue
             py = center_y - int(y_val * scale)

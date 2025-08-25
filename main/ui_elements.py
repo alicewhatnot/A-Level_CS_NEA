@@ -1,10 +1,11 @@
 import pygame
-from settings import UI_FONT, COLOUR_INACTIVE, COLOUR_ACTIVE, COLOUR_BUTTON, COLOUR_CHECKBOX_BORDER, COLOUR_CHECKBOX_FILL, SUPERSCRIPT_MAP
+from settings import UI_FONT, COLOUR_INACTIVE, COLOUR_BUTTON, COLOUR_CHECKBOX_BORDER, COLOUR_CHECKBOX_FILL, SUPERSCRIPT_MAP
 class InputBox:
     def __init__(self, x, y, w, h, font=UI_FONT, text='', center_text=False):
         self.rect = pygame.Rect(x, y, w, h)
         self.border_colour = COLOUR_INACTIVE  # border colour
         self.text_colour = pygame.Color('black')  # text stays black
+        self.border_width = 2
         self.text = text
         self.display_text = text
         self.font = font
@@ -16,10 +17,9 @@ class InputBox:
     def handleEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.rect.collidepoint(event.pos)
-            # border changes only when clicked
-            self.border_colour = COLOUR_ACTIVE if self.active else COLOUR_INACTIVE
+            self.border_width = 3 if self.active else 2
 
-        if event.type == pygame.KEYDOWN and self.active:
+        elif event.type == pygame.KEYDOWN and self.active:
             if event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
                 self.display_text = self.display_text[:-1]
@@ -40,6 +40,7 @@ class InputBox:
 
         self.txt_surface = self.font.render(self.display_text, True, self.text_colour)
 
+
     def draw(self, screen):
         # render text
         self.txt_surface = self.font.render(self.display_text, True, self.text_colour)
@@ -51,7 +52,7 @@ class InputBox:
             screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
 
         # draw border only
-        pygame.draw.rect(screen, self.border_colour, self.rect, 2)
+        pygame.draw.rect(screen, self.border_colour, self.rect, self.border_width)
 
     def getText(self):
         return self.text
@@ -82,11 +83,25 @@ class Button:
     def __init__(self, x, y, w, h, text=""):
         self.rect = pygame.Rect(x, y, w, h)
         self.text = text
+        self.scale = 1.0
+        self.hover_scale = 1.05  # scale when hovered
+
+    def update(self, mouse_pos):
+        if self.rect.collidepoint(mouse_pos):
+            self.scale = self.hover_scale
+        else:
+            self.scale = 1.0
 
     def draw(self, screen):
-        pygame.draw.rect(screen, COLOUR_BUTTON, self.rect)
+        scaled_rect = self.rect.copy()
+        scaled_rect.width = int(self.rect.width * self.scale)
+        scaled_rect.height = int(self.rect.height * self.scale)
+        scaled_rect.center = self.rect.center  # keep the center in place
+
+        pygame.draw.rect(screen, COLOUR_BUTTON, scaled_rect)
         txt_surf = UI_FONT.render(self.text, True, (0, 0, 0))
-        screen.blit(txt_surf, (self.rect.x + 10, self.rect.y + 8))
+        text_rect = txt_surf.get_rect(center=scaled_rect.center)
+        screen.blit(txt_surf, text_rect.topleft)
 
     def isClicked(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)

@@ -121,7 +121,7 @@ def validateTokens(tokens):
     if tokens[-1][0] == "OP" or parenthesis_balance != 0:
         return False
 
-    return True
+    return True, variable
 
 def parse(expression):
     '''Brings together the three subroutines involved in parsing the expression'''
@@ -134,9 +134,10 @@ def parse(expression):
     tokens = insertImplicitMultiplication(tokens)
     print ("Multiplication Inserted")
 
-    if not validateTokens(tokens):
+    valid, variable = validateTokens(tokens)
+    if not valid:
         print ("Invalid Tokens")
         return None
 
     print ("Returning Valid Tokens")
-    return tokens
+    return tokens, variable
