@@ -11,13 +11,14 @@ def tokenize(expression):
 
     # Regex patterns to look for in the expression
     patterns = {
-        "NUMBER": re.compile(r"\d+(\.\d+)?"),
+        "NUMBER": re.compile(r"(\d+(\.\d*)?|\.\d+)"),
         "FUNCTION": re.compile(r"(sin|cos|tan)"),
         "NAME": re.compile(r"[a-zA-Z]"),
         "OP": re.compile(r"\*\*|[+\-*/]"),
         "LEFTPARENTHESIS": re.compile(r"\("),
         "RIGHTPARENTHESIS": re.compile(r"\)")
     }
+
 
     # Checking every character in the expression while there are still no invalid found 
     while index < len(expression) and valid_characters:
@@ -71,7 +72,6 @@ def validateTokens(tokens):
     '''Checks if the order of the tokens array is valid'''
     parenthesis_balance = 0
     prev_token = None
-    prev_value = None
     variable_found = False
     variable = None
 
@@ -82,10 +82,8 @@ def validateTokens(tokens):
         # Only sets prev_token if one exists
         if index > 0:
             prev_token = tokens[index - 1][0]
-            prev_value = tokens[index - 1][1]
         else:
             prev_token = None
-            prev_value = None
 
         # Only sets next_token if one exists
         if index < len(tokens) - 1:
@@ -99,15 +97,15 @@ def validateTokens(tokens):
         elif token == "RIGHTPARENTHESIS":
             parenthesis_balance -= 1
             if parenthesis_balance < 0:
-                return False
+                return False, variable
 
         # Checking for double operators, only allows if the second is a negative
         if prev_token == "OP" and token == "OP" and value != "-":
-            return False
+            return False, variable
 
         # Checking if a trigonometric function is followed by a parenthesis
         if token == "FUNCTION" and next_token != "LEFTPARENTHESIS":
-            return False
+            return False, variable
 
         # Checks to see if there is more than one variable attempting to be created
         if token == "NAME":
@@ -115,7 +113,7 @@ def validateTokens(tokens):
                 variable = value
                 variable_found = True
             elif value != variable:
-                return False
+                return False, variable
 
         # ** must have a valid base
         if token == "OP" and value == "**":

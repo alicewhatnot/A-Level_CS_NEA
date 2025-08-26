@@ -121,33 +121,22 @@ while running:
         # Submit transformations
         if submit_trans_button.isClicked(event) and function_entered:
 
-            current_transforms = (
-                x_stretch_box.getText(),
-                y_stretch_box.getText(),
-                x_shift_box.getText(),
-                y_shift_box.getText(),
-                x_reflect.checked,
-                y_reflect.checked
+            # Always clear and enqueue, even if unchanged
+            animation_controller.queue.clear()
+            animation_controller.animating = False
+            animation_controller.current_function = None
+
+            transform_manager.addTransformations(
+                x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
             )
 
-            if current_transforms != previous_transformations:
+            # enqueue all transformations
+            while not transform_manager.transformations_queue.isEmpty():
+                transformation = transform_manager.transformations_queue.dequeue()
+                animation_controller.enqueueAnimation(transformation)
 
-                animation_controller.queue.clear()
-                animation_controller.animating = False
-                animation_controller.current_function = None
+            print("Transformations queued for animation")
 
-                transform_manager.addTransformations(
-                    x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
-                )
-
-                previous_transformations = current_transforms
-
-                # enqueue raw Transformation objects, not Functions
-                while not transform_manager.transformations_queue.isEmpty():
-                    transformation = transform_manager.transformations_queue.dequeue()
-                    animation_controller.enqueueAnimation(transformation)
-
-                print("Transformations queued for animation")
 
         if differentiate_button.isClicked(event) and function_entered:
             transform_manager.addDifferentiation()
