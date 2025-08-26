@@ -3,6 +3,7 @@ from collections import deque
 from core.ast import copyAST
 from core.function import Function
 from core.modify_function import ShiftFunction, StretchFunction, ReflectFunction, DifferentiateFunction
+import math
 
 
 class AnimationController:
@@ -43,17 +44,11 @@ class AnimationController:
         # No animation running
         if not self.animating:
             if self.current_function:
-                self.graph_plotter.drawAll(
-                    screen,
-                    dual_view=dual_view,
-                    derivative_function=self.current_function if dual_view else None
-                )
-                # override the original function's color
+                # draw original (gray) + final transformed
                 self.graph_plotter.drawFunction(
-                    screen,
-                    self.graph_plotter.functions[0],
-                    color_override=(150, 150, 150)
+                    screen, self.graph_plotter.functions[0], color_override=(150, 150, 150)
                 )
+                self.graph_plotter.drawFunction(screen, self.current_function)
             else:
                 self.graph_plotter.drawAll(screen, dual_view=dual_view)
             return
@@ -61,35 +56,38 @@ class AnimationController:
         # During animation
         now = pygame.time.get_ticks()
         t = (now - self.start_time) / self.duration
+        t_clamped = max(0.0, min(t, 1.0))
 
         if t >= 1.0:
+            # finalize this transform
             final_func = self._applyTransformation(self.base_function, self.transformation, 1.0)
             self.current_function = final_func
 
             if self.transformation.type != "differentiate":
-                # Only add transformed function to plot in non-differentiation animations
+                # store stable state AFTER finishing
                 self.graph_plotter.functions = [self.graph_plotter.functions[0], final_func]
 
-            self.original_color_override = (150, 150, 150)
+            # draw the final frame of this transform
+            if self.transformation.type == "differentiate" or dual_view:
+                self.graph_plotter.drawAll(screen, dual_view=True, derivative_function=final_func)
+            else:
+                self.graph_plotter.drawFunction(
+                    screen, self.graph_plotter.functions[0], color_override=(150, 150, 150)
+                )
+                self.graph_plotter.drawFunction(screen, final_func)
+
+            # prepare next transform and bail out this frame to avoid drawing a new intermediate now
             self._startNext()
+            return  # <-- crucial to prevent the one-frame flash
 
-        # Intermediate function for animation
-        intermediate_func = self._applyTransformation(self.base_function, self.transformation, min(t, 1.0))
+        # Draw intermediate frame
+        intermediate_func = self._applyTransformation(self.base_function, self.transformation, t_clamped)
 
-        # Draw using dual_view flag from main loop
         if self.transformation.type == "differentiate" or dual_view:
-            # derivative_function will appear in bottom half
-            self.graph_plotter.drawAll(
-                screen,
-                dual_view=True,
-                derivative_function=intermediate_func
-            )
+            self.graph_plotter.drawAll(screen, dual_view=True, derivative_function=intermediate_func)
         else:
-            self.graph_plotter.functions = [self.graph_plotter.functions[0], intermediate_func]
             self.graph_plotter.drawFunction(
-                screen,
-                self.graph_plotter.functions[0],
-                color_override=self.original_color_override or (150, 150, 150)
+                screen, self.graph_plotter.functions[0], color_override=(150, 150, 150)
             )
             self.graph_plotter.drawFunction(screen, intermediate_func)
 
@@ -108,10 +106,20 @@ class AnimationController:
             modifier = StretchFunction(temp_func, transformation.axis, interpolated_value)
 
         elif transformation.type == "reflect":
-            if t < 0.5:
-                # intermediate unreflected state
-                return temp_func
-            modifier = ReflectFunction(temp_func, transformation.axis)
+            ast_copy = copyAST(base_func.getFunction())
+            copy_variable = base_func.function_variable
+            temp_func = Function(ast_copy, copy_variable)
+
+            # Nonlinear easing
+            # t=0 → scale=1, t=1 → scale=-1
+            eased_t = math.sin(t * math.pi / 2)  # smooth "ease-out"
+            scale = (1 - 2 * eased_t)
+
+            if transformation.axis == 'x':
+                return StretchFunction(temp_func, 'y', scale).ModifyFunction()
+            elif transformation.axis == 'y':
+                return StretchFunction(temp_func, 'x', scale).ModifyFunction()
+
 
         elif transformation.type == "differentiate":
             modifier = DifferentiateFunction(temp_func)

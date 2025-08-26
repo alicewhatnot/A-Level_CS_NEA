@@ -3,8 +3,8 @@ from settings import UI_FONT, COLOUR_INACTIVE, COLOUR_BUTTON, COLOUR_CHECKBOX_BO
 class InputBox:
     def __init__(self, x, y, w, h, font=UI_FONT, text='', center_text=False):
         self.rect = pygame.Rect(x, y, w, h)
-        self.border_colour = COLOUR_INACTIVE  # border colour
-        self.text_colour = pygame.Color('black')  # text stays black
+        self.border_colour = COLOUR_INACTIVE
+        self.text_colour = pygame.Color('black')
         self.border_width = 2
         self.text = text
         self.display_text = text
@@ -24,25 +24,43 @@ class InputBox:
                 self.text = self.text[:-1]
                 self.display_text = self.display_text[:-1]
 
+                # Turn off superscript if box is empty
+                if not self.text:
+                    self.superscript_mode = False
+
             elif event.key == pygame.K_RIGHT:
                 self.superscript_mode = False
 
-            elif event.unicode == "^":
-                self.text += "^"
-                self.superscript_mode = True
+            elif event.key == pygame.K_ESCAPE:
+                self.active = False
+                self.border_width = 2
+
+            elif event.key == pygame.K_RETURN:  # submit pressed
+                self.submit()
 
             else:
                 self.text += event.unicode
-                if self.superscript_mode:
-                    self.display_text += SUPERSCRIPT_MAP.get(event.unicode, event.unicode)
+
+                if event.unicode == "^":
+                    self.superscript_mode = True
                 else:
-                    self.display_text += event.unicode
+                    if self.superscript_mode:
+                        self.display_text += SUPERSCRIPT_MAP.get(event.unicode, event.unicode)
+                    else:
+                        self.display_text += event.unicode
 
         self.txt_surface = self.font.render(self.display_text, True, self.text_colour)
 
+    def submit(self):
+        """Called when the user presses Enter/Return"""
+        # Reset superscript mode on submit
+        self.superscript_mode = False
+        # You can also deactivate the box if desired
+        self.active = False
+        self.border_width = 2
+        # Here you could also process self.text as the submitted value
 
     def draw(self, screen):
-        # render text
         self.txt_surface = self.font.render(self.display_text, True, self.text_colour)
 
         if self.center_text:
@@ -51,7 +69,6 @@ class InputBox:
         else:
             screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
 
-        # draw border only
         pygame.draw.rect(screen, self.border_colour, self.rect, self.border_width)
 
     def getText(self):

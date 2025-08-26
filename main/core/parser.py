@@ -117,9 +117,16 @@ def validateTokens(tokens):
             elif value != variable:
                 return False
 
+        # ** must have a valid base
+        if token == "OP" and value == "**":
+            if prev_token not in ["NUMBER", "NAME", "RIGHTPARENTHESIS"]:
+                return False, variable
+            if next_token not in ["NUMBER", "NAME", "LEFTPARENTHESIS"]:
+                return False, variable
+            
     # Final check if the last token is an operator or if the parenthesis balance is incorrect
     if tokens[-1][0] == "OP" or parenthesis_balance != 0:
-        return False
+        return False, variable
 
     return True, variable
 
@@ -128,16 +135,17 @@ def parse(expression):
     tokens = tokenize(expression)
     print ("Expression Tokenized")
 
-    if not tokens:  
-        return None
-    
+    if not tokens:
+        print ("Invalid Tokens")
+        return [], None
+
     tokens = insertImplicitMultiplication(tokens)
     print ("Multiplication Inserted")
 
     valid, variable = validateTokens(tokens)
     if not valid:
         print ("Invalid Tokens")
-        return None
+        return [], None
 
     print ("Returning Valid Tokens")
     return tokens, variable

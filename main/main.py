@@ -57,7 +57,7 @@ clock = pygame.time.Clock()
 running = True
 
 graph_plotter = GraphPlotter()
-animation_controller = AnimationController(graph_plotter, duration=1000)  # 1s per transformation
+animation_controller = AnimationController(graph_plotter, duration=2000)  # 1s per transformation
 function_entered = False
 current_tab = "transformations"
 previous_transformations = []
