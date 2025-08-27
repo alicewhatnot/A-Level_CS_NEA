@@ -1,5 +1,7 @@
 import pygame
+import os
 from settings import UI_FONT, COLOUR_INACTIVE, COLOUR_BUTTON, COLOUR_CHECKBOX_BORDER, COLOUR_CHECKBOX_FILL, SUPERSCRIPT_MAP
+
 class InputBox:
     def __init__(self, x, y, w, h, font=UI_FONT, text='', center_text=False):
         self.rect = pygame.Rect(x, y, w, h)
@@ -74,26 +76,26 @@ class InputBox:
     def getText(self):
         return self.text
 
-
 class Checkbox:
-    def __init__(self, x, y, w, h, label=""):
+    def __init__(self, x, y, w, h, label="", tick_img=None):
         self.rect = pygame.Rect(x, y, w, h)
         self.label = label
         self.checked = False
+        self.tick_img = tick_img
 
+    def draw(self, screen):
+        pygame.draw.rect(screen, COLOUR_CHECKBOX_BORDER, self.rect, 2)
+        if self.checked and self.tick_img:
+            tick_pos = (self.rect.centerx - self.tick_img.get_width() // 2,
+                        self.rect.centery - self.tick_img.get_height() // 2)
+            screen.blit(self.tick_img, tick_pos)
     def handleEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
             self.checked = not self.checked
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, COLOUR_CHECKBOX_BORDER, self.rect, 2)
-        if self.checked:
-            pygame.draw.rect(screen, COLOUR_CHECKBOX_FILL, self.rect.inflate(-4, -4))
-        label_surface = UI_FONT.render(self.label, True, (0, 0, 0))
-        screen.blit(label_surface, (self.rect.x + 30, self.rect.y - 2))
-
     def getValue(self):
         return self.checked
+
 
 
 class Button:
@@ -133,3 +135,4 @@ class Text:
     def draw(self, screen):
         txt_surface = UI_FONT.render(self.text, True, self.colour)
         screen.blit(txt_surface, (self.x, self.y))
+

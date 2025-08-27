@@ -5,6 +5,7 @@ from core.transform_manager import TransformManager
 from core.animation_controller import AnimationController
 from core.queue import Queue
 import pygame
+import os
 import sys
 
 from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, COLOUR_INACTIVE, COLOUR_FAIL
@@ -16,6 +17,9 @@ pygame.key.set_repeat(300, 50)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Function Transformation UI")
 
+from settings import load_assets
+arrow_img, tick_img = load_assets()
+
 # UI Elements
 function_text = Text(20,30, "Enter Function")
 y_text = Text(20,66, "f(x) =")
@@ -26,24 +30,24 @@ differentiate_button = Button(20, 120, 140, 32, "Differentiate")
 
 in_x_axis = Text(20, 120, "X Axis")
 x_stretch_text = Text(20, 150, "Stretch scale factor")
-x_stretch_box = InputBox(220, 145, 32, 32, text="1", center_text=True)
+x_stretch_box = InputBox(220, 145, 64, 32, text="1", center_text=True)
 
 x_reflect_text = Text(20, 190, "Reflect X-axis")
-x_reflect = Checkbox(220, 185, 32, 32)
+x_reflect = Checkbox(220, 185, 64, 32, tick_img=tick_img)
 
 x_shift_text = Text(20, 230, "Shift amount")
-x_shift_box = InputBox(220, 225, 32, 32, text="0", center_text=True)
+x_shift_box = InputBox(220, 225, 64, 32, text="0", center_text=True)
 
 in_y_axis = Text(20, 280, "Y Axis")
 
 y_stretch_text = Text(20, 310, "Stretch scale factor")
-y_stretch_box = InputBox(220, 305, 32, 32, text="1", center_text=True)
+y_stretch_box = InputBox(220, 305, 64, 32, text="1", center_text=True)
 
 y_reflect_text = Text(20, 350, "Reflect Y-axis")
-y_reflect = Checkbox(220, 345, 32, 32)
+y_reflect = Checkbox(220, 345, 64, 32, tick_img=tick_img)
 
 y_shift_text = Text(20, 390, "Shift amount")
-y_shift_box = InputBox(220, 385, 32, 32, text="0", center_text=True)
+y_shift_box = InputBox(220, 385, 64, 32, text="0", center_text=True)
 
 submit_trans_button = Button(20, 430, 305, 40, "Submit Transformations")
 
@@ -51,6 +55,15 @@ user_function_text = ""
 
 transformation_tab_button = Button(20, HEIGHT - 60, 140, 40, "Transform")
 differentiation_tab_button = Button(180, HEIGHT - 60, 140, 40, "Differentiate")
+
+transform_to_ui = {
+    ("stretch", "x"): x_stretch_box.rect,
+    ("stretch", "y"): y_stretch_box.rect,
+    ("shift", "x"): x_shift_box.rect,
+    ("shift", "y"): y_shift_box.rect,
+    ("reflect", "x"): x_reflect.rect,
+    ("reflect", "y"): y_reflect.rect
+}
 
 # Main loop 
 clock = pygame.time.Clock()
@@ -198,6 +211,16 @@ while running:
 
     transformation_tab_button.draw(screen)
     differentiation_tab_button.draw(screen)
+
+    # Draw arrow pointing at current transformation (skip differentiation)
+    if animation_controller.animating and animation_controller.transformation.type != "differentiate":
+        key = (animation_controller.transformation.type, animation_controller.transformation.axis)
+        target_rect = transform_to_ui.get(key)
+        if target_rect:
+            # Position arrow to the right of the UI element
+            arrow_pos = (target_rect.right + arrow_img.get_width() + 5, target_rect.centery - arrow_img.get_height() // 2)
+            screen.blit(arrow_img, arrow_pos)
+
 
     pygame.display.flip()
     clock.tick(FPS)

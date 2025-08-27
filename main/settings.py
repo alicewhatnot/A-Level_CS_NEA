@@ -1,4 +1,5 @@
 import pygame
+import os
 
 pygame.init()
 
@@ -7,7 +8,7 @@ WIDTH, HEIGHT = 1440, 900
 SIDEBAR_WIDTH = 350
 
 # Font
-MATHS_FONT = pygame.font.Font("main/STIXTwoText-Italic.otf", 30)
+MATHS_FONT = pygame.font.Font("main/assets/STIXTwoText-Italic.otf", 30)
 UI_FONT = pygame.font.SysFont("Arial", 20)
 
 SUPERSCRIPT_MAP = {
@@ -47,3 +48,16 @@ COLOUR_SIDEBAR = (230, 230, 230)
 
 # Frame rate
 FPS = 60
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def load_assets():
+    arrow_path = os.path.join(BASE_DIR, "assets", "arrow.svg")
+    arrow_img = pygame.image.load(arrow_path).convert_alpha()
+    arrow_img = pygame.transform.scale(arrow_img, (20, 20))
+
+    tick_path = os.path.join(BASE_DIR, "assets", "tick.svg")
+    tick_img = pygame.image.load(tick_path).convert_alpha()
+    tick_img = pygame.transform.scale(tick_img, (20, 20))
+
+    return arrow_img, tick_img

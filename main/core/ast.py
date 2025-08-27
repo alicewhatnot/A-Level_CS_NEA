@@ -1,5 +1,6 @@
 from core.queue import Queue
 from core.stack import Stack
+import math
 
 class ASTNode:
     def __init__(self, node_type, value=None, left=None, right=None):
@@ -99,22 +100,26 @@ def postfixToAST(postfix_queue):
     # The remaining node is the root of the AST
     print ("AST Created")
     return node_stack.pop()
-
-
-def evaluateAST(node, x_value, variable):
-    '''Recursively evaluates AST for a given x-value'''
+    
+def evaluateAST(node, x_value, variable, convert_degrees=False):
+    """Recursively evaluates AST for a given x-value"""
     if node is None:
         return None
+
+    if convert_degrees and node.type == "NAME" and node.value == variable:
+        x_val = math.degrees(x_value)
+    else:
+        x_val = x_value
 
     if node.type == "NUMBER":
         return float(node.value)
 
     if node.type == "NAME" and node.value == variable:
-        return x_value
+        return x_val
 
     if node.type == "OP":
-        left = evaluateAST(node.left, x_value, variable)
-        right = evaluateAST(node.right, x_value, variable)
+        left = evaluateAST(node.left, x_value, variable, convert_degrees)
+        right = evaluateAST(node.right, x_value, variable, convert_degrees)
 
         if node.value == "+":
             return left + right
@@ -127,21 +132,18 @@ def evaluateAST(node, x_value, variable):
         elif node.value == "**":
             return left ** right
 
-    if node.type == "FUNCTION":  # e.g. sin, cos
-        arg = evaluateAST(node.left, x_value, variable)
-        import math
+    if node.type == "FUNCTION":
+        arg = evaluateAST(node.left, x_value, variable, convert_degrees = True)
+        arg = math.radians(arg)
         if node.value == "sin":
             return math.sin(arg)
         elif node.value == "cos":
             return math.cos(arg)
         elif node.value == "tan":
             return math.tan(arg)
-        elif node.value == "exp":
-            return math.exp(arg)
-        elif node.value == "log":
-            return math.log(arg)
-    
+
     return None
+
 
 def copyAST(node):
     if node is None:
@@ -152,3 +154,11 @@ def copyAST(node):
         copyAST(node.left),
         copyAST(node.right)
     )
+
+def containsTrigFunction(node):
+    """Returns True if AST contains sin, cos, or tan"""
+    if node is None:
+        return False
+    if node.type == "FUNCTION" and node.value in ("sin", "cos", "tan"):
+        return True
+    return containsTrigFunction(node.left) or containsTrigFunction(node.right)

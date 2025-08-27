@@ -1,6 +1,6 @@
 import pygame
 from collections import deque
-from core.ast import copyAST
+from core.ast import copyAST, containsTrigFunction
 from core.function import Function
 from core.modify_function import ShiftFunction, StretchFunction, ReflectFunction, DifferentiateFunction
 import math
@@ -129,23 +129,30 @@ class AnimationController:
 
 
     def _applyTransformation(self, base_func, transformation, t):
-        # Make a copy of the AST and function object
-        ast_copy = copyAST(base_func.getFunction())
-        copy_variable = base_func.function_variable
-        temp_func = Function(ast_copy, copy_variable)
+        convert_degrees = containsTrigFunction(base_func.getFunction())
 
+        # Compute interpolated value
         if transformation.type == "shift":
-            interpolated_value = t * transformation.value
-            modifier = ShiftFunction(temp_func, transformation.axis, interpolated_value)
+            if transformation.axis == "x" and convert_degrees:
+                interpolated_value = math.radians(t * transformation.value)
+            else:
+                interpolated_value = t * transformation.value
+            modifier = ShiftFunction(Function(copyAST(base_func.getFunction()), base_func.function_variable),
+                                    transformation.axis, interpolated_value)
 
         elif transformation.type == "stretch":
-            interpolated_value = 1 + (transformation.value - 1) * t
-            modifier = StretchFunction(temp_func, transformation.axis, interpolated_value)
+            if transformation.axis == "x" and convert_degrees:
+                interpolated_value = 1 + (math.radians(transformation.value) - 1) * t
+            else:
+                interpolated_value = 1 + (transformation.value - 1) * t
+            modifier = StretchFunction(Function(copyAST(base_func.getFunction()), base_func.function_variable),
+                                    transformation.axis, interpolated_value)
 
         elif transformation.type == "reflect":
             # Nonlinear easing for visual effect
             eased_t = math.sin(t * math.pi / 2)
             scale = (1 - 2 * eased_t)
+            temp_func = Function(copyAST(base_func.getFunction()), base_func.function_variable)
 
             if transformation.axis == 'x':
                 return StretchFunction(temp_func, 'y', scale).ModifyFunction()
@@ -153,12 +160,12 @@ class AnimationController:
                 return StretchFunction(temp_func, 'x', scale).ModifyFunction()
 
         elif transformation.type == "differentiate":
-            # Differentiation: return derivative immediately, no animation
+            temp_func = Function(copyAST(base_func.getFunction()), base_func.function_variable)
             return DifferentiateFunction(temp_func).ModifyFunction()
 
         else:
             # Unknown transformation: return function as-is
-            return temp_func
+            return Function(copyAST(base_func.getFunction()), base_func.function_variable)
 
-        # Apply modifier for shift/stretch
+        # Apply modifier
         return modifier.ModifyFunction()
