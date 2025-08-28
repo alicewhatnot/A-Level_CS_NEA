@@ -37,6 +37,9 @@ class InputBox:
                 self.active = False
                 self.border_width = 2
 
+            elif event.key == pygame.K_DELETE:
+                pass
+
             elif event.key == pygame.K_RETURN:  # submit pressed
                 self.submit()
 
@@ -63,15 +66,33 @@ class InputBox:
         # Here you could also process self.text as the submitted value
 
     def draw(self, screen):
-        self.txt_surface = self.font.render(self.display_text, True, self.text_colour)
+        # Render the full text surface
+        full_surface = self.font.render(self.display_text, True, self.text_colour)
 
-        if self.center_text:
-            text_rect = self.txt_surface.get_rect(center=self.rect.center)
-            screen.blit(self.txt_surface, text_rect.topleft)
+        # If text is too wide, crop from the left
+        if full_surface.get_width() > self.rect.width - 10:  # padding of 5px each side
+            # Define a clipping rectangle: only the rightmost part of the text is visible
+            clip_rect = pygame.Rect(
+                full_surface.get_width() - (self.rect.width - 10),  # start x inside text
+                0,
+                self.rect.width - 10,  # width of visible area
+                full_surface.get_height()
+            )
+            visible_surface = full_surface.subsurface(clip_rect)
         else:
-            screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+            visible_surface = full_surface
 
+        # Draw the text inside the box
+        if self.center_text:
+            text_rect = visible_surface.get_rect(center=self.rect.center)
+            screen.blit(visible_surface, text_rect.topleft)
+        else:
+            # Align to left with padding
+            screen.blit(visible_surface, (self.rect.x + 5, self.rect.y + 5))
+
+        # Draw the border
         pygame.draw.rect(screen, self.border_colour, self.rect, self.border_width)
+
 
     def getText(self):
         return self.text

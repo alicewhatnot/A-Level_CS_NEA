@@ -30,24 +30,24 @@ differentiate_button = Button(20, 120, 140, 32, "Differentiate")
 
 in_x_axis = Text(20, 120, "X Axis")
 x_stretch_text = Text(20, 150, "Stretch scale factor")
-x_stretch_box = InputBox(220, 145, 64, 32, text="1", center_text=True)
+x_stretch_box = InputBox(220, 145, 48, 32, text="1", center_text=True)
 
 x_reflect_text = Text(20, 190, "Reflect X-axis")
-x_reflect = Checkbox(220, 185, 64, 32, tick_img=tick_img)
+x_reflect = Checkbox(220, 185, 48, 32, tick_img=tick_img)
 
 x_shift_text = Text(20, 230, "Shift amount")
-x_shift_box = InputBox(220, 225, 64, 32, text="0", center_text=True)
+x_shift_box = InputBox(220, 225, 48, 32, text="0", center_text=True)
 
 in_y_axis = Text(20, 280, "Y Axis")
 
 y_stretch_text = Text(20, 310, "Stretch scale factor")
-y_stretch_box = InputBox(220, 305, 64, 32, text="1", center_text=True)
+y_stretch_box = InputBox(220, 305, 48, 32, text="1", center_text=True)
 
 y_reflect_text = Text(20, 350, "Reflect Y-axis")
-y_reflect = Checkbox(220, 345, 64, 32, tick_img=tick_img)
+y_reflect = Checkbox(220, 345, 48, 32, tick_img=tick_img)
 
 y_shift_text = Text(20, 390, "Shift amount")
-y_shift_box = InputBox(220, 385, 64, 32, text="0", center_text=True)
+y_shift_box = InputBox(220, 385, 48, 32, text="0", center_text=True)
 
 submit_trans_button = Button(20, 430, 305, 40, "Submit Transformations")
 
