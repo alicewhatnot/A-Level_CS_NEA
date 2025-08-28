@@ -16,5 +16,5 @@ class Function:
     def setColour(self, new_colour):
         self.function_colour = new_colour
 
-    def outputFunction(self):
-        return self.function_tree, self.function_variable
+    def getFunctionVar(self):
+        return self.function_variable

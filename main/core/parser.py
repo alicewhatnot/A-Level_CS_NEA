@@ -3,6 +3,7 @@ import re
 def tokenize(expression):
     '''Returns a two dimensional array of all characters in the expression and their associated token'''
     #Initialise variables and clean the expression'''
+    
     tokens = []
     index = 0
     valid_characters = True
@@ -18,8 +19,7 @@ def tokenize(expression):
         "LEFTPARENTHESIS": re.compile(r"\("),
         "RIGHTPARENTHESIS": re.compile(r"\)")
     }
-
-
+    
     # Checking every character in the expression while there are still no invalid found 
     while index < len(expression) and valid_characters:
         matched = False
@@ -47,23 +47,21 @@ def tokenize(expression):
     
 def insertImplicitMultiplication(tokens):
     '''Adds multiplication where the user would consider it to be implicit'''
-    #Initialise variables
     new_tokens = []
     length = len(tokens)
 
     for index in range(length - 1):
-        current_token = tokens[index][0]
-        current_value = tokens[index][1]
-        next_token = tokens[index + 1][0]
+        current_token, current_value = tokens[index]
+        next_token, next_value = tokens[index + 1]
 
-        new_tokens.append([current_token, current_value])
+        new_tokens.append((current_token, current_value))
 
-        # If two relevant tokens are next to each other, insert a new '*' operator token
+        # Insert '*' if implicit multiplication detected
         if (current_token in ["NUMBER", "NAME", "RIGHTPARENTHESIS"] and
-            next_token in ["NAME", "FUNCTION", "LEFTPARENTHESIS"]):
-            new_tokens.append(["OP", "*"])
+            next_token in ["NAME", "FUNCTION", "LEFTPARENTHESIS", "NUMBER"]):
+            new_tokens.append(("OP", "*"))
 
-    # Add the last token
+    # Add last token
     new_tokens.append(tokens[-1])
 
     return new_tokens
@@ -122,6 +120,16 @@ def validateTokens(tokens):
             if next_token not in ["NUMBER", "NAME", "LEFTPARENTHESIS"]:
                 return False, variable
             
+             # NAME ** NAME
+            prev_value = tokens[index - 1][1] if index > 0 else None
+            next_value = tokens[index + 1][1] if index < len(tokens) - 1 else None
+            if prev_token == "NAME" and next_token == "NAME" and prev_value == next_value:
+                return False, variable
+        
+        # Checking for ()
+        if token == "LEFTPARENTHESIS" and next_token == "RIGHTPARENTHESIS":
+            return False, variable
+        
     # Final check if the last token is an operator or if the parenthesis balance is incorrect
     if tokens[-1][0] == "OP" or parenthesis_balance != 0:
         return False, variable
@@ -146,4 +154,8 @@ def parse(expression):
         return [], None
 
     print ("Returning Valid Tokens")
+    
+    for token in tokens:
+        print (token)
+
     return tokens, variable

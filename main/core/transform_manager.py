@@ -5,6 +5,7 @@ from core.transformations_entry import enqueueTransformations, enqueueDifferenti
 from core.queue import Queue
 from core.function import Function 
 from core.ast import copyAST
+from core.transformation_class import Transformation
 
 
 class TransformManager:
@@ -19,25 +20,25 @@ class TransformManager:
         )
 
     def addDifferentiation(self):
-        self.transformations_queue = enqueueDifferentiation()
+        self.transformations_queue = enqueueDifferentiation(self.current_function)
 
-    def applyTransformation(self, transformation):
-        ast_copy = copyAST(self.current_function.getFunction())
-        new_function = Function(ast_copy)
-
+    def applyTransformation(self, transformation, update_base=True):
         modifier = None
+
         if transformation.type == "shift":
-            modifier = ShiftFunction(new_function, transformation.axis, transformation.value)
+            modifier = ShiftFunction(self.current_function, transformation.axis, transformation.value)
         elif transformation.type == "stretch":
-            modifier = StretchFunction(new_function, transformation.axis, transformation.value)
+            modifier = StretchFunction(self.current_function, transformation.axis, transformation.value)
         elif transformation.type == "reflect":
-            modifier = ReflectFunction(new_function, transformation.axis)
+            modifier = ReflectFunction(self.current_function, transformation.axis)
         elif transformation.type == "differentiate":
-            modifier = DifferentiateFunction(new_function)
+            modifier = DifferentiateFunction(self.current_function)
+
         if modifier:
-            transformed_function = modifier.ModifyFunction()
-            self.current_function = transformed_function  # update for next transformation
-            return transformed_function
+            new_func = modifier.ModifyFunction()
+            if update_base:
+                self.current_function = new_func
+            return new_func
 
     def applyAllTransformations(self, graph_plotter):
         while not self.transformations_queue.isEmpty():
@@ -59,7 +60,8 @@ class TransformManager:
 
         # Always work on a fresh AST copy
         ast_copy = copyAST(self.current_function.getFunction())
-        new_func = Function(ast_copy)
+        var_copy = self.current_function.getVariable()
+        new_func = Function(ast_copy, var_copy)
 
         modifier = None
         if transformation.type == "shift":
@@ -76,5 +78,14 @@ class TransformManager:
             return self.current_function
         return None
 
+    def setBaseFunction(self, new_function):
+        """
+        Set a modified function (e.g., a derivative) as the new base function
+        for future transformations.
+        """
+        self.current_function = new_function
+        self.transformations_queue = Queue(1)
+
     def hasTransformations(self):
         return not self.transformations_queue.isEmpty()
+        

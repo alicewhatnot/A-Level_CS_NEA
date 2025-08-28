@@ -121,6 +121,9 @@ def evaluateAST(node, x_value, variable, convert_degrees=False):
         left = evaluateAST(node.left, x_value, variable, convert_degrees)
         right = evaluateAST(node.right, x_value, variable, convert_degrees)
 
+        if left is None or right is None:
+            return None
+
         if node.value == "+":
             return left + right
         elif node.value == "-":
@@ -128,9 +131,15 @@ def evaluateAST(node, x_value, variable, convert_degrees=False):
         elif node.value == "*":
             return left * right
         elif node.value == "/":
-            return left / right if right != 0 else None
+            try:
+                return left / right  
+            except: 
+                return None
         elif node.value == "**":
-            return left ** right
+            try:
+                return left ** right
+            except:
+                return None
 
     if node.type == "FUNCTION":
         arg = evaluateAST(node.left, x_value, variable, convert_degrees = True)
