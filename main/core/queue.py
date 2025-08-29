@@ -1,5 +1,3 @@
-from core.transformation_class import Transformation
-
 class Queue:
     def __init__(self, max_size):
         self.__items = [None] * max_size
@@ -17,7 +15,6 @@ class Queue:
         self.__size += 1
 
     def dequeue(self):
-        '''If transformation then returns the transformation at the front of the queue for graphing'''
         if self.isEmpty():
             return None
         item = self.__items[self.__front]
@@ -31,5 +28,9 @@ class Queue:
 
     def isFull(self):
         return self.__size == self.__max_size
+    
+    def clear(self):
+        while not self.isEmpty:
+            self.dequeue()
     
     

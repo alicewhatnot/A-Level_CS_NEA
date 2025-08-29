@@ -7,3 +7,12 @@ class Transformation:
         self.type = transform_type            # "shift", "stretch", "reflect", "differentiate", etc.
         self.value = transform_value          # numeric value (for shift/stretch)
         self.axis = transform_axis            # "x" or "y" (if applicable)
+
+    def getVal(self):
+        return self.value
+    
+    def getType(self):
+        return self.type
+
+    def getAxis(self):
+        return self.axis

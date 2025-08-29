@@ -11,7 +11,9 @@ class ASTNode:
 
 
 def postfix(tokens):
-    '''Produces a postfix version of the token list'''
+    """
+    Produces a postfix version of the token list
+    """
 
     # Initialising variables and dictionaries
     postfix_queue = Queue(64)
@@ -73,7 +75,9 @@ def postfix(tokens):
     return postfix_queue
 
 def postfixToAST(postfix_queue):
-    '''Creates an AST from the postfix queue using the ASTNode class'''
+    """
+    Creates an AST from the postfix queue using the ASTNode class
+    """
     node_stack = Stack(64)
 
     while not postfix_queue.isEmpty():
@@ -101,29 +105,36 @@ def postfixToAST(postfix_queue):
     print ("AST Created")
     return node_stack.pop()
     
-def evaluateAST(node, x_value, variable, convert_degrees=False):
-    """Recursively evaluates AST for a given x-value"""
+def evaluateAST(node, variable_value, variable, convert_degrees=False):
+    """
+    Recursively evaluates AST for a given value along the axis
+    """
     if node is None:
         return None
 
+    # Convert the node value to degrees if required
     if convert_degrees and node.type == "NAME" and node.value == variable:
-        x_val = math.degrees(x_value)
+        variable_value = math.degrees(variable_value)
     else:
-        x_val = x_value
+        variable_value = variable_value
 
+    # Return the number 
     if node.type == "NUMBER":
         return float(node.value)
 
+    # Return the value of the variable at that point along the axis
     if node.type == "NAME" and node.value == variable:
-        return x_val
+        return variable_value
 
     if node.type == "OP":
-        left = evaluateAST(node.left, x_value, variable, convert_degrees)
-        right = evaluateAST(node.right, x_value, variable, convert_degrees)
+        # Fetch value of the left and right nodes
+        left = evaluateAST(node.left, variable_value, variable, convert_degrees)
+        right = evaluateAST(node.right, variable_value, variable, convert_degrees)
 
         if left is None or right is None:
             return None
 
+        # Perform the operators
         if node.value == "+":
             return left + right
         elif node.value == "-":
@@ -141,20 +152,23 @@ def evaluateAST(node, x_value, variable, convert_degrees=False):
             except:
                 return None
 
+    # Evaluate the functions
     if node.type == "FUNCTION":
-        arg = evaluateAST(node.left, x_value, variable, convert_degrees = True)
-        arg = math.radians(arg)
+        argument = evaluateAST(node.left, variable_value, variable, convert_degrees = True)
+        argument = math.radians(argument)
         if node.value == "sin":
-            return math.sin(arg)
+            return math.sin(argument)
         elif node.value == "cos":
-            return math.cos(arg)
+            return math.cos(argument)
         elif node.value == "tan":
-            return math.tan(arg)
-
+            return math.tan(argument)
     return None
 
 
 def copyAST(node):
+    """
+    Produces a copy of the AST with the supplied root node
+    """
     if node is None:
         return None
     return type(node)(
@@ -165,7 +179,9 @@ def copyAST(node):
     )
 
 def containsTrigFunction(node):
-    """Returns True if AST contains sin, cos, or tan"""
+    """
+    Returns True if AST contains sin, cos, or tan
+    """
     if node is None:
         return False
     if node.type == "FUNCTION" and node.value in ("sin", "cos", "tan"):

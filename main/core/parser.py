@@ -1,8 +1,10 @@
 import re
 
 def tokenize(expression):
-    '''Returns a two dimensional array of all characters in the expression and their associated token'''
-    #Initialise variables and clean the expression'''
+    """
+    Returns a two dimensional array of all characters in the expression and their associated token
+    """
+    #Initialise variables and clean the expression"""
     
     tokens = []
     index = 0
@@ -46,7 +48,9 @@ def tokenize(expression):
         return None
     
 def insertImplicitMultiplication(tokens):
-    '''Adds multiplication where the user would consider it to be implicit'''
+    """
+    Adds multiplication where the user would consider it to be implicit
+    """
     new_tokens = []
     length = len(tokens)
 
@@ -67,7 +71,9 @@ def insertImplicitMultiplication(tokens):
     return new_tokens
 
 def validateTokens(tokens):
-    '''Checks if the order of the tokens array is valid'''
+    """
+    Checks if the order of the tokens array is valid
+    """
     parenthesis_balance = 0
     prev_token = None
     variable_found = False
@@ -137,7 +143,9 @@ def validateTokens(tokens):
     return True, variable
 
 def parse(expression):
-    '''Brings together the three subroutines involved in parsing the expression'''
+    """
+    Brings together the three subroutines involved in parsing the expression
+    """
     tokens = tokenize(expression)
     print ("Expression Tokenized")
 

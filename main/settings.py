@@ -33,11 +33,27 @@ SUPERSCRIPT_MAP = {
 # Colours
 COLOUR_INACTIVE = pygame.Color('black')
 COLOUR_BUTTON = pygame.Color('gray60')
-COLOUR_CHECKBOX_BORDER = pygame.Color('black')
-COLOUR_CHECKBOX_FILL = pygame.Color('green')
+COLOUR_BOX = pygame.Color('black')
+COLOUR_TEXT = pygame.Color('black')
 COLOUR_FAIL = pygame.Color('red')
 
-# Backgrounds
+FUNCTION_COLOURS = [
+    pygame.Color('red'),
+    pygame.Color('orange'),
+    pygame.Color('gold'),
+    pygame.Color('green'),
+    pygame.Color('deepskyblue'),
+    pygame.Color('blue'),
+    pygame.Color('purple'),
+    pygame.Color('magenta'),
+    pygame.Color('brown'),
+    pygame.Color('teal'),
+    pygame.Color('navy'),
+    pygame.Color('darkgreen'),
+]
+
+COLOUR_AXIS = pygame.Color(50, 50, 50)
+COLOUR_GRAPH_SEPARATOR = pygame.Color(200, 200, 200)
 COLOUR_BACKGROUND = (255, 255, 255)
 COLOUR_SIDEBAR = (230, 230, 230)
 
@@ -72,3 +88,7 @@ IGNORE_KEYS = [
     pygame.K_F6, pygame.K_F7, pygame.K_F8, pygame.K_F9, pygame.K_F10,
     pygame.K_F11, pygame.K_F12,
 ]
+
+# Graphing settings
+LINE_THICKNESS = 3
+GRAPH_SCALE = 40

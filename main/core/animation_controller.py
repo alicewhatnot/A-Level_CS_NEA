@@ -1,23 +1,22 @@
 import pygame
-from collections import deque
 from core.ast import copyAST, containsTrigFunction
 from core.function import Function
 from core.modify_function import ShiftFunction, StretchFunction, ReflectFunction, DifferentiateFunction
+from core.queue import Queue
 import math
-
 
 class AnimationController:
     def __init__(self, graph_plotter, duration=1000, gap=500):
         self.graph_plotter = graph_plotter
         self.duration = duration
-        self.gap = gap                  # gap in ms
-        self.queue = deque()
+        self.gap = gap                  
+        self.queue = Queue(6)
         self.animating = False
         self.start_time = None
         self.base_function = None
         self.transformation = None
         self.current_function = None
-        self.in_gap = False              # new state for pause
+        self.in_gap = False              
         self.gap_start_time = None
         self.transform_manager = None
         self.top_function = None
@@ -26,38 +25,44 @@ class AnimationController:
 
 
     def addTransformManager(self, transform_manager):
+        """
+        Add the transformation manager
+        This is a method not part of the constructor as the controller is created before the transformation manager
+        """
         self.transform_manager = transform_manager
 
     def enqueueAnimation(self, transformation):
-        """Queue a transformation animation."""
-        self.queue.append(transformation)
+        """
+        Queues a transformation animation
+        """
+        self.queue.enqueue(transformation)
 
-        # if nothing is animating, start right away
+        # If nothing is animating, start animation immediatly
         if not self.animating:
-            self._startNext()
+            self.startNext()
 
-    def _startNext(self):
-        if not self.queue:
+    def startNext(self):
+        """
+        Animates the first transformation in the queue
+        """
+        if self.queue.isEmpty():
             self.animating = False
             return
 
-        self.transformation = self.queue.popleft()
-        self.base_function = self.current_function or self.graph_plotter.functions[0]
+        # Fetch the transformation and function for animation
+        self.transformation = self.queue.dequeue()
+        self.base_function = self.current_function or self.graph_plotter.getBaseFunction()
 
-        # Precompute derivative if needed
-        if self.transformation.type == "differentiate":
-            self.target_function = DifferentiateFunction(
-                Function(copyAST(self.base_function.getFunction()), self.base_function.function_variable)
-            ).ModifyFunction()
-        else:
-            self.target_function = None
-
+        # Start animating and timing
         self.start_time = pygame.time.get_ticks()
         self.animating = True
 
 
     def update(self, screen, dual_view=False):
-        # Determine top and bottom functions for dual view
+        """
+        Updates and renders the current animation state        
+        """
+        # Determine top and bottom functions for dual view (if present)
         top_func = self.top_function or self.current_function
         bottom_func = self.bottom_function if self.differentiating else None
 
@@ -70,20 +75,25 @@ class AnimationController:
                 bottom_function=bottom_func
             )
 
-            # If differentiating, skip further drawing
+            # If differentiating don't draw
             if self.differentiating:
                 return
 
+        # Gap between animations
         if self.in_gap:
             now = pygame.time.get_ticks()
+            # Draw original function with a gray override
             self.graph_plotter.drawFunction(
-                screen, self.graph_plotter.functions[0], color_override=(150,150,150)
+                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150)
             )
+            # Draw the transformed function as is
             self.graph_plotter.drawFunction(screen, self.current_function)
 
+            # If the time from start is the amount given by gap then end gap
             if now - self.gap_start_time >= self.gap:
                 self.in_gap = False
-                self._startNext()   # proceed to next animation
+                # Next animation starts
+                self.startNext()   
             return
 
 
@@ -91,105 +101,101 @@ class AnimationController:
         if not self.animating:
             if self.current_function:
                 if dual_view:
-                    # Draw top = base function, bottom = derivative if exists
+                    # Draw top as base function, bottom as derivative if exists
                     self.graph_plotter.drawAll(screen, dual_view=True, top_function=top_func, bottom_function=bottom_func)
                 else:
-                    # Single graph: gray old + last transformed function
-                    self.graph_plotter.drawFunction(screen, self.graph_plotter.functions[0], color_override=(150,150,150))
+                    # Draw gray old function and the current transformed function
+                    self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150))
                     self.graph_plotter.drawFunction(screen, self.current_function)
             else:
-                # Nothing yet, just draw whatever functions exist
+                # If no function then draw whatever is in graph plotter
                 self.graph_plotter.drawAll(screen, dual_view=dual_view)
             return
 
+        # Calculates how far along the animation is
         now = pygame.time.get_ticks()
-        t = (now - self.start_time) / self.duration
-        t_clamped = max(0.0, min(t, 1.0))
+        progress = (now - self.start_time) / self.duration
+        # Make sure the progress doesn't leave 0-1
+        progress_safe = max(0.0, min(progress, 1.0))
 
-        # Normal animation for shift/stretch/reflect
-        intermediate_func = self._applyTransformation(self.base_function, self.transformation, t_clamped)
+        # Animates shifts stretches and reflections 
+        intermediate_function = self.applyTransformation(self.base_function, self.transformation, progress_safe)
 
-        if t >= 1.0:
+        if progress >= 1.0:
             # Finish this transformation
-            self.current_function = intermediate_func
+            self.current_function = intermediate_function
 
-            # Start gap immediately
+            # Start gap 
             self.in_gap = True
             self.gap_start_time = pygame.time.get_ticks()
 
             # Draw the final frame for the first tick of the gap
             self.graph_plotter.drawFunction(
-                screen, self.graph_plotter.functions[0], color_override=(150,150,150)
+                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150)
             )
             self.graph_plotter.drawFunction(screen, self.current_function)
             return
 
+        # Draw intermediate frame of gray original and intermediate animated function
+        self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150))
+        self.graph_plotter.drawFunction(screen, intermediate_function)
 
-        # Draw intermediate frame: gray original + intermediate function
-        self.graph_plotter.drawFunction(screen, self.graph_plotter.functions[0], color_override=(150,150,150))
-        self.graph_plotter.drawFunction(screen, intermediate_func)
+    def applyTransformation(self, base_function, transformation, progress):
+        # Calculates the intermediate functions from original -> transformed
+        # Shift and stretch are simple linear animations, reflect uses non-linear animating
+        if transformation.getType() == "shift":
+            # Copies and modifies the original function by the transformation amount scaled by progress
+            intermediate_value = progress * transformation.getVal()
+            modifier = ShiftFunction(Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour()),transformation.getAxis(), intermediate_value)
 
-    def _applyTransformation(self, base_function, transformation, t):
-        convert_degrees = containsTrigFunction(base_function.getFunction())
+        elif transformation.getType() == "stretch":
+            # Copies and modifies the original function by the transformation amount scaled by progress
+            intermediate_value = 1 + (transformation.getVal() - 1) * progress
+            modifier = StretchFunction(Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour()),transformation.getAxis(), intermediate_value)
 
-        # Compute interpolated value
-        if transformation.type == "shift":
-            if transformation.axis == "x" and convert_degrees:
-                interpolated_value = t * transformation.value
-            else:
-                interpolated_value = t * transformation.value
-            modifier = ShiftFunction(Function(copyAST(base_function.getFunction()), base_function.function_variable),transformation.axis, interpolated_value)
-
-        elif transformation.type == "stretch":
-            if transformation.axis == "x" and convert_degrees:
-                interpolated_value = 1 + (transformation.value - 1) * t
-            else:
-                interpolated_value = 1 + (transformation.value - 1) * t
-            modifier = StretchFunction(Function(copyAST(base_function.getFunction()), base_function.function_variable),
-                transformation.axis, interpolated_value)
-
-        elif transformation.type == "reflect":
-            # Nonlinear easing for visual effect
-            eased_t = math.sin(t * math.pi / 2)
-            scale = (1 - 2 * eased_t)
-            temp_func = Function(copyAST(base_function.getFunction()), base_function.function_variable)
-
-            if transformation.axis == 'x':
+        elif transformation.getType() == "reflect":
+            # Nonlinear as an attempt to distinguish a reflect from a scale of -1
+            nonlinear_progress = math.sin(progress * math.pi / 2)
+            scale = (1 - 2 * nonlinear_progress)
+            
+            # Copies and modifies the original function by the transformation amount scaled by progress
+            temp_func = Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour())
+            if transformation.getAxis() == 'x':
                 return StretchFunction(temp_func, 'y', scale).ModifyFunction()
-            elif transformation.axis == 'y':
+            elif transformation.getAxis() == 'y':
                 return StretchFunction(temp_func, 'x', scale).ModifyFunction()
 
-        elif transformation.type == "differentiate":
-            temp_func = Function(copyAST(base_function.getFunction()), base_function.function_variable)
-            return DifferentiateFunction(temp_func).ModifyFunction()
-
         else:
-            return Function(copyAST(base_function.getFunction()), base_function.function_variable)
+            # If no transformation found just return the function
+            return Function(copyAST(base_function.getFunction()), base_function.getFunctionVar())
 
         # Apply modifier
         return modifier.ModifyFunction()
 
+    # Specific method for differentiating
     def differentiate(self):
         if not self.transform_manager:
             return
 
-        # Make a deep copy of the current function to use as top (previous)
+        # Make a copy of the current function to use on the top graph
         previous_derivative = Function(
-            copyAST(self.transform_manager.current_function.getFunction()),
-            self.transform_manager.current_function.getFunctionVar()
+            copyAST(self.transform_manager.getCurrentFunction().getFunction()),
+            self.transform_manager.getCurrentFunction().getFunctionVar(),
+            self.transform_manager.getCurrentFunction().getColour(),
         )
 
-        # Compute new derivative from a **fresh copy of previous_derivative**
+        # Create the new derivative from the previous copy
         new_derivative = DifferentiateFunction(
-            Function(copyAST(previous_derivative.getFunction()), previous_derivative.getFunctionVar())
+            Function(copyAST(previous_derivative.getFunction()), previous_derivative.getFunctionVar(), previous_derivative.getColour())
         ).ModifyFunction()
 
-        # Update transform manager
+        # Update the transform manager
         self.transform_manager.setBaseFunction(new_derivative)
 
         print("Top:", previous_derivative.getFunction())
         print("Bottom:", new_derivative.getFunction())
 
+        # Update attributes to be accessed by the update method
         self.top_function = previous_derivative
         self.bottom_function = new_derivative
         self.differentiating = True

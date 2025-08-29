@@ -1,5 +1,5 @@
 class Function:
-    def __init__(self, function_tree, function_variable, function_colour=(201, 66, 119)):
+    def __init__(self, function_tree, function_variable, function_colour=(0, 0, 0)):
         self.function_tree = function_tree  
         self.function_variable = function_variable
         self.function_colour = function_colour

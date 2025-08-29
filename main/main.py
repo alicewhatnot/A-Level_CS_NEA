@@ -3,12 +3,13 @@ from core.graph_plotter import GraphPlotter
 from core.function import Function 
 from core.transform_manager import TransformManager 
 from core.animation_controller import AnimationController
+import random
 from core.ast import containsTrigFunction
 from core.queue import Queue
 import pygame
 import sys
 
-from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, COLOUR_INACTIVE, COLOUR_FAIL
+from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, FUNCTION_COLOURS
 from ui_elements import InputBox, Checkbox, Button, Text
 from graph_ui import drawGraphArea
 
@@ -76,6 +77,7 @@ animation_controller = AnimationController(graph_plotter, duration=2000)  # 1s p
 
 # Defining flags & variables
 function_entered = False
+current_function_colour = None
 current_tab = "transformations"
 previous_transformations = []
 current_displayed_function = None
@@ -125,13 +127,19 @@ while running:
         x_reflect.handleEvent(event)
         y_reflect.handleEvent(event)
 
+        # Choose a new random colour for the function every time the entry box is empty
+        if function_box.getText().strip() and current_function_colour is None:
+            current_function_colour = random.choice(FUNCTION_COLOURS)
+        if not function_box.getText().strip():
+            current_function_colour = None
+
         # Submit function
         if (event.type == pygame.KEYDOWN and function_box.active):
 
             # Text recieved, passed to an object responsible for creating function objects from user input
             user_function_text = function_box.getText()
             user_function_entry = FunctionEntry(user_function_text) 
-
+        
             # User input is parsed
             success = user_function_entry.parseFunction()
 
@@ -142,7 +150,7 @@ while running:
                 function_tree, function_variable = user_function_entry.outputFunction()
 
                 # Function object created
-                function_object = Function(function_tree, function_variable)
+                function_object = Function(function_tree, function_variable, current_function_colour)
 
                 # Plotted and related flags updated
                 graph_plotter.plotFunction(function_object)  
@@ -155,7 +163,7 @@ while running:
                 animation_controller.addTransformManager(transform_manager)
 
                 # Clearing any animations or transformations from any previous valid inputs
-                animation_controller.queue.clear()
+                animation_controller.queue.clear
                 animation_controller.animating = False
                 previous_transformations = None
                 
@@ -172,6 +180,7 @@ while running:
 
             # Clear the animation queue before adding
             animation_controller.queue.clear()
+
             animation_controller.animating = False
             animation_controller.current_function = None
 
@@ -199,7 +208,6 @@ while running:
             # Reset Derivative Order
             derivative_order = 0
 
-            # Stop ongoing animations
             animation_controller.queue.clear()
             animation_controller.animating = False
 
@@ -221,6 +229,12 @@ while running:
 
         if differentiation_tab_button.isClicked(event):
             current_tab = "differentiation"
+
+            # Stop any animations that might be occuring
+            animation_controller.queue.clear()
+            animation_controller.animating = False
+            animation_controller.current_function = current_displayed_function
+            animation_controller.transformation = None
 
     # Getting the mouse position and passing to buttons for a hover effect
     mouse_pos = pygame.mouse.get_pos()

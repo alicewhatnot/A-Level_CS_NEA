@@ -1,7 +1,9 @@
 from core.ast import ASTNode
 
 def differentiate(node):
-    '''Recursivly differentiates a node and its relevant children'''
+    """
+    Recursivly differentiates a node and its relevant children
+    """
     if node is None:
         return None
 

@@ -3,6 +3,10 @@ from core.parser import tokenize
 from core.queue import Queue
 
 def validTransformation(value, type):
+    """
+    Performs validation on the user input depending on the type of transformation
+    Utilises the tokenizer from the main function parser
+    """
     contains_name = False
     
     # Only parses value if not boolean
@@ -37,6 +41,9 @@ def validTransformation(value, type):
     return False
 
 def enqueueTransformations(x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect):
+    """
+    Enqueues the transformations that are valid
+    """
     transformations_queue = Queue(6)
 
     # Read values from input boxes
@@ -65,11 +72,3 @@ def enqueueTransformations(x_stretch_box, y_stretch_box, x_shift_box, y_shift_bo
 
     return transformations_queue
         
-def enqueueDifferentiation(function_object):
-    """
-    Enqueue a differentiation transformation that targets the given function object.
-    """
-    transformations_queue = Queue(1)
-    # Store the target function inside the transformation
-    transformations_queue.enqueue(Transformation("differentiate"))
-    return transformations_queue
