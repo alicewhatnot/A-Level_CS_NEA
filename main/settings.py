@@ -8,7 +8,7 @@ WIDTH, HEIGHT = 1440, 900
 SIDEBAR_WIDTH = 350
 
 # Fonts
-MATHS_FONT = pygame.font.Font("main/assets/STIXTwoText-Italic.otf", 30)
+MATHS_FONT = pygame.font.Font("main/assets/STIXTwoText-Italic.otf", 50)
 UI_FONT = pygame.font.SysFont("Arial", 20)
 GRAPH_FONT = pygame.font.SysFont("Arial", 10)
 GRAPH_AXIS_FONT = pygame.font.Font("main/assets/STIXTwoText-Italic.otf", 20)

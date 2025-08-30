@@ -24,10 +24,10 @@ def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", fon
         # Y-axis label with derivative notation
         if bottom_graph:
             # For the bottom graph show the derivative order
-            y_label_text = f"f{'\'*' * derivative_order}({variable})"
+            y_label_text = f"f{'\'' * derivative_order}({variable})"
         else:
             # For the top graph show one order lower
-            y_label_text = f"f{'\'*' * (derivative_order - 1)}({variable})"
+            y_label_text = f"f{'\'' * (derivative_order - 1)}({variable})"
 
         x_label_surface = font[1].render(variable, True, axis_color)
         y_label_surface = font[1].render(y_label_text, True, axis_color)

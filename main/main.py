@@ -23,35 +23,34 @@ from settings import load_assets
 
 arrow_img, tick_img = load_assets()
 
-function_text = Text(20,30, "Enter Function")
-pre_text = Text(20,66, "f(x) =")
-function_box = InputBox(75, 60, 250, 40, font=MATHS_FONT)
+function_text = Text(20,50, "Enter Function")
+function_box = InputBox(20, 90, 305, 60, font=MATHS_FONT)
 
-differentiate_button = Button(20, 120, 140, 32, "Differentiate")
-reset_button = Button(170, 120, 140, 32, "Reset")
+differentiate_button = Button(20, 170, 140, 32, "Differentiate")
+reset_button = Button(170, 170, 140, 32, "Reset")
 
-in_x_axis = Text(20, 120, "X Axis")
-x_stretch_text = Text(20, 150, "Stretch scale factor")
-x_stretch_box = InputBox(220, 145, 48, 32, text="1", center_text=True)
+in_x_axis = Text(20, 200, "X Axis")
+x_stretch_text = Text(20, 250, "Stretch scale factor")
+x_stretch_box = InputBox(240, 245, 48, 32, text="1", center_text=True)
 
-x_reflect_text = Text(20, 190, "Reflect X-axis")
-x_reflect = Checkbox(220, 185, 48, 32, tick_img=tick_img)
+x_reflect_text = Text(20, 290, "Reflect X-axis")
+x_reflect = Checkbox(240, 285, 48, 32, tick_img=tick_img)
 
-x_shift_text = Text(20, 230, "Shift amount")
-x_shift_box = InputBox(220, 225, 48, 32, text="0", center_text=True)
+x_shift_text = Text(20, 330, "Shift amount")
+x_shift_box = InputBox(240, 325, 48, 32, text="0", center_text=True)
 
-in_y_axis = Text(20, 280, "Y Axis")
+in_y_axis = Text(20, 400, "Y Axis")
 
-y_stretch_text = Text(20, 310, "Stretch scale factor")
-y_stretch_box = InputBox(220, 305, 48, 32, text="1", center_text=True)
+y_stretch_text = Text(20, 450, "Stretch scale factor")
+y_stretch_box = InputBox(240, 445, 48, 32, text="1", center_text=True)
 
-y_reflect_text = Text(20, 350, "Reflect Y-axis")
-y_reflect = Checkbox(220, 345, 48, 32, tick_img=tick_img)
+y_reflect_text = Text(20, 490, "Reflect Y-axis")
+y_reflect = Checkbox(240, 485, 48, 32, tick_img=tick_img)
 
-y_shift_text = Text(20, 390, "Shift amount")
-y_shift_box = InputBox(220, 385, 48, 32, text="0", center_text=True)
+y_shift_text = Text(20, 530, "Shift amount")
+y_shift_box = InputBox(240, 525, 48, 32, text="0", center_text=True)
 
-submit_trans_button = Button(20, 430, 305, 40, "Submit Transformations")
+submit_trans_button = Button(20, 600, 305, 40, "Submit Transformations")
 
 user_function_text = ""
 
@@ -107,7 +106,6 @@ while running:
         drawGraphArea(screen, derivative_order, dual_view, use_degrees=use_degrees, variable="x")
     else:
         drawGraphArea(screen, derivative_order, dual_view, use_degrees=use_degrees, variable=current_variable)
-        pre_text.setText(f"f({current_variable}) =")
 
     # Updating the animating controller to display a function once entered
     if function_entered:
@@ -119,7 +117,6 @@ while running:
 
         # Calling event handling for the user inputs
         function_box.handleEvent(event)
-
         x_stretch_box.handleEvent(event)
         y_stretch_box.handleEvent(event)
         x_shift_box.handleEvent(event)
@@ -163,7 +160,7 @@ while running:
                 animation_controller.addTransformManager(transform_manager)
 
                 # Clearing any animations or transformations from any previous valid inputs
-                animation_controller.queue.clear
+                animation_controller.queue.clear()
                 animation_controller.animating = False
                 previous_transformations = None
                 
@@ -197,11 +194,13 @@ while running:
         # Differentiate
         if differentiate_button.isClicked(event) and function_entered:
             # Special case of animation controller in which no animation occurs
-            animation_controller.differentiate()
+            # Higher derivative orders require a lot of processing due to reccursion so are avoided
+            if derivative_order < 6:
+                animation_controller.differentiate()
 
-            # Then order increased to 1 for representation on the graph axis            
-            derivative_order += 1
-            print(f"Differentiation queued. Now at order {derivative_order}")
+                # Then order increased to 1 for representation on the graph axis            
+                derivative_order += 1
+                print(f"Differentiation queued. Now at order {derivative_order}")
 
         # Reset differentiation
         if reset_button.isClicked(event) and function_entered:
@@ -244,7 +243,6 @@ while running:
 
     # Drawing UI elements
     function_text.draw(screen)
-    pre_text.draw(screen)
     function_box.draw(screen)
 
     # Transformation specific
@@ -284,7 +282,7 @@ while running:
         target_rect = transform_to_ui.get(key)
         if target_rect:
             # Positioning
-            arrow_pos = (target_rect.right + arrow_img.get_width() + 5, target_rect.centery - arrow_img.get_height() // 2)
+            arrow_pos = (target_rect.right + arrow_img.get_width(), target_rect.centery - arrow_img.get_height() // 2)
             screen.blit(arrow_img, arrow_pos)
 
 

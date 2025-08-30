@@ -74,4 +74,10 @@ CLASS Queue
     PUBLIC METHOD IS_FULL()
         RETURN size = max_size
     ENDMETHOD
+
+    PUBLIC METHOD CLEAR()
+        WHILE NOT IS_EMPTY()
+            DEQUEUE()
+        ENDWHILE
+    ENDMETHOD    
 ENDCLASS

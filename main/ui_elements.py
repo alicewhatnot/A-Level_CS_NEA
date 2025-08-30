@@ -1,6 +1,7 @@
 import pygame
 from settings import UI_FONT, COLOUR_BUTTON, COLOUR_BOX, COLOUR_TEXT, SUPERSCRIPT_MAP, IGNORE_KEYS
 
+
 class InputBox:
     def __init__(self, x, y, w, h, font=UI_FONT, text='', center_text=False):
         self.rect = pygame.Rect(x, y, w, h)
