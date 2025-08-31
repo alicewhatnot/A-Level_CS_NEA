@@ -163,7 +163,14 @@ while running:
                 animation_controller.queue.clear()
                 animation_controller.animating = False
                 previous_transformations = None
-                
+
+                # Reset Differentiation 
+                derivative_order = 0
+                animation_controller.current_function = current_displayed_function
+                animation_controller.top_function = None
+                animation_controller.bottom_function = None
+                animation_controller.differentiating = False
+                animation_controller.transform_manager.setBaseFunction(current_displayed_function)
 
             else:
                 # Clearing any inputs to ensure the user sees nothing, an indication of an invalid entry
