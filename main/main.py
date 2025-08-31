@@ -72,7 +72,7 @@ running = True
 
 # Creating overseeing classes 
 graph_plotter = GraphPlotter()
-animation_controller = AnimationController(graph_plotter, duration=2000)  # 1s per transformation
+animation_controller = AnimationController(graph_plotter, duration=2000)  
 
 # Defining flags & variables
 function_entered = False

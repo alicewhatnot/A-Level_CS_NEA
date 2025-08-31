@@ -1,5 +1,5 @@
 import pygame
-from core.ast import copyAST, containsTrigFunction
+from core.ast import copyAST
 from core.function import Function
 from core.modify_function import ShiftFunction, StretchFunction, ReflectFunction, DifferentiateFunction
 from core.queue import Queue
@@ -158,12 +158,16 @@ class AnimationController:
             nonlinear_progress = math.sin(progress * math.pi / 2)
             scale = (1 - 2 * nonlinear_progress)
             
-            # Copies and modifies the original function by the transformation amount scaled by progress
             temp_func = Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour())
-            if transformation.getAxis() == 'x':
-                return StretchFunction(temp_func, 'y', scale).ModifyFunction()
-            elif transformation.getAxis() == 'y':
-                return StretchFunction(temp_func, 'x', scale).ModifyFunction()
+
+            if progress < 1:
+                # Uses stretch during the animation to stretch from 1 -> -1
+                if transformation.getAxis() == 'x':
+                    modifier = StretchFunction(temp_func, 'y', scale)
+                else:  # 'y'
+                    modifier = StretchFunction(temp_func, 'x', scale)
+            else:
+                modifier = ReflectFunction(temp_func, transformation.getAxis())
 
         else:
             # If no transformation found just return the function
