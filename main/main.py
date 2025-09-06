@@ -200,7 +200,7 @@ while running:
         if differentiate_button.isClicked(event) and function_entered:
             # Special case of animation controller in which no animation occurs
             # Higher derivative orders require a lot of processing due to reccursion so are avoided
-            if derivative_order < 6:
+            if derivative_order < 4:
                 animation_controller.differentiate()
 
                 # Then order increased to 1 for representation on the graph axis            
@@ -239,6 +239,9 @@ while running:
             animation_controller.animating = False
             animation_controller.current_function = current_displayed_function
             animation_controller.transformation = None
+
+    # update function input box for cursor blink
+    function_box.update(clock.tick(FPS))
 
     # Getting the mouse position and passing to buttons for a hover effect
     mouse_pos = pygame.mouse.get_pos()

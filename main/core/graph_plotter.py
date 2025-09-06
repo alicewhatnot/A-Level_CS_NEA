@@ -85,68 +85,71 @@ class GraphPlotter:
         Takes colour override, y offset and graph height if required
         """
 
-        # If not altered default to full height
-        if graph_height is None:
-            graph_height = HEIGHT 
+        try:
+            # If not altered default to full height
+            if graph_height is None:
+                graph_height = HEIGHT 
 
-        # Get the tree, variable and colour from the function arguement
-        function_tree = function_object.getFunction()
-        if function_tree is None:
-            return
-        variable = function_object.getFunctionVar()
-        # Override to gray if needed
-        colour = color_override or function_object.getColour()
+            # Get the tree, variable and colour from the function arguement
+            function_tree = function_object.getFunction()
+            if function_tree is None:
+                return
+            variable = function_object.getFunctionVar()
+            # Override to gray if needed
+            colour = color_override or function_object.getColour()
 
-        # Define graph drawing area and scale        
-        graph_left = SIDEBAR_WIDTH
-        graph_width = WIDTH - SIDEBAR_WIDTH
-        center_x = graph_left + graph_width // 2
-        center_y = y_offset + graph_height // 2
-        scale = GRAPH_SCALE
+            # Define graph drawing area and scale        
+            graph_left = SIDEBAR_WIDTH
+            graph_width = WIDTH - SIDEBAR_WIDTH
+            center_x = graph_left + graph_width // 2
+            center_y = y_offset + graph_height // 2
+            scale = GRAPH_SCALE
 
-        prev_py = None
-        segment = []
+            prev_py = None
+            segment = []
 
-        min_y = y_offset
-        # Removed 5 from the graph height to ensure the plotted function does not go over the dual graph boundaries
-        max_y = y_offset + graph_height - 5
+            min_y = y_offset
+            # Removed 5 from the graph height to ensure the plotted function does not go over the dual graph boundaries
+            max_y = y_offset + graph_height - 5
 
-        # Iterate over pixels along the graphs length
-        for px in range(graph_left, WIDTH):
-            # For each x value,
-            x_val = (px - center_x) / scale
-            # The y value is the function evaluated at that x value
-            y_val = evaluateAST(function_tree, x_val, variable)
+            # Iterate over pixels along the graphs length
+            for px in range(graph_left, WIDTH):
+                # For each x value,
+                x_val = (px - center_x) / scale
+                # The y value is the function evaluated at that x value
+                y_val = evaluateAST(function_tree, x_val, variable)
 
-            # Handles discontinuous functions
-            if y_val is None or math.isnan(y_val) or math.isinf(y_val):
-                # Draws the current segment and resets
-                if len(segment) > 1:
-                    drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
-                segment = []
-                prev_py = None
-                continue
-
-            # Map y values to screen pixels
-            py = center_y - int(y_val * scale)
-
-            # Only append points inside bounds
-            if min_y <= py <= max_y:
-                # Break segment if jump is too large for asymptote handling
-                if prev_py is not None and abs(py - prev_py) > graph_height / 2:
+                # Handles discontinuous functions
+                if y_val is None or math.isnan(y_val) or math.isinf(y_val):
+                    # Draws the current segment and resets
                     if len(segment) > 1:
                         drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
                     segment = []
+                    prev_py = None
+                    continue
 
-                segment.append((px, py))
-                prev_py = py
-            else:
-                # If out of bounds finish drawing the line segment then reset
-                if len(segment) > 1:
-                    drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
-                segment = []
-                prev_py = None
+                # Map y values to screen pixels
+                py = center_y - int(y_val * scale)
+    
+                # Only append points inside bounds
+                if min_y <= py <= max_y:
+                    # Break segment if jump is too large for asymptote handling
+                    if prev_py is not None and abs(py - prev_py) > graph_height / 2:
+                        if len(segment) > 1:
+                            drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
+                        segment = []
 
-        # Ensure there are no segments left undrawn
-        if len(segment) > 1:
-            drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
+                    segment.append((px, py))
+                    prev_py = py
+                else:
+                    # If out of bounds finish drawing the line segment then reset
+                    if len(segment) > 1:
+                        drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
+                    segment = []
+                    prev_py = None
+
+            # Ensure there are no segments left undrawn
+            if len(segment) > 1:
+                drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
+        except:
+            print ("An error occured in graphing")

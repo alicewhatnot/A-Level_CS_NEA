@@ -16,6 +16,10 @@ class InputBox:
         self.active = False
         self.superscript_mode = False
         self.allow_get = True
+        self.cursor_visible = True
+        self.cursor_timer = 0
+        self.cursor_interval = 250  
+        self.cursor_width = 1
 
     def handleEvent(self, event):
         """
@@ -25,6 +29,8 @@ class InputBox:
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.rect.collidepoint(event.pos)
             self.border_width = 3 if self.active else 2
+            self.cursor_visible = True
+            self.cursor_timer = 0
 
         # Handling keyboard inputs
         elif event.type == pygame.KEYDOWN and self.active:
@@ -74,6 +80,10 @@ class InputBox:
             self.display_text = self.buildDisplayText(self.text)
             self.txt_surface = self.font.render(self.display_text, True, self.text_colour)
 
+            # Reset cursor blink after typing
+            self.cursor_visible = True
+            self.cursor_timer = 0
+
     def buildDisplayText(self, text):
         """
         Rebuilds display_text from text, applying superscript after ^
@@ -90,6 +100,18 @@ class InputBox:
                 else:
                     result += character
         return result
+
+    def update(self, change_in_time):
+        """
+        Updates cursor blink timer
+        """
+        if self.active:
+            self.cursor_timer += change_in_time
+            if self.cursor_timer >= self.cursor_interval:
+                self.cursor_visible = not self.cursor_visible
+                self.cursor_timer = 0
+        else:
+            self.cursor_visible = False
 
     def draw(self, screen):
         """
@@ -113,18 +135,32 @@ class InputBox:
         if self.center_text:
             text_rect = visible_surface.get_rect(center=self.rect.center)
             screen.blit(visible_surface, text_rect.topleft)
+            cursor_x = text_rect.right
+            cursor_y = text_rect.y
         else:
-            screen.blit(visible_surface, (self.rect.x + 5, self.rect.y + 5))
+            text_pos = (self.rect.x + 5, self.rect.y + 5)
+            screen.blit(visible_surface, text_pos)
+            cursor_x = text_pos[0] + visible_surface.get_width()
+            cursor_y = text_pos[1]
 
         # Draw border
         pygame.draw.rect(screen, self.border_colour, self.rect, self.border_width)
+
+        # Draw cursor if active
+        if self.active and self.cursor_visible:
+            if self.superscript_mode:
+                # Smaller superscript cursor
+                cursor_height = self.font.get_height() // 2 
+                cursor_rect = pygame.Rect(cursor_x + 2, cursor_y, self.cursor_width, cursor_height)
+            else:
+                cursor_rect = pygame.Rect(cursor_x + 2, cursor_y, self.cursor_width, self.font.get_height())
+            pygame.draw.rect(screen, self.text_colour, cursor_rect)
 
     def getText(self):
         """
         Returns the current text in the input box
         """
         return self.text
-
 
 class Checkbox:
     def __init__(self, x, y, w, h, label="", tick_img=None):
