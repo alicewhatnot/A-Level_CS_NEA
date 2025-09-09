@@ -4,7 +4,7 @@ import os
 pygame.init()
 
 # Screen
-WIDTH, HEIGHT = 1440, 900
+WIDTH, HEIGHT = 1280, 720
 SIDEBAR_WIDTH = 350
 
 # Fonts

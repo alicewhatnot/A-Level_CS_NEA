@@ -130,23 +130,32 @@ class GraphPlotter:
 
                 # Map y values to screen pixels
                 py = center_y - int(y_val * scale)
-    
-                # Only append points inside bounds
-                if min_y <= py <= max_y:
-                    # Break segment if jump is too large for asymptote handling
+
+                # If in bounds or just one graph just draw the line
+                if min_y <= py <= max_y or graph_height>500:
                     if prev_py is not None and abs(py - prev_py) > graph_height / 2:
                         if len(segment) > 1:
                             drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
                         segment = []
-
                     segment.append((px, py))
                     prev_py = py
+
+                # If out of bounds needs to clip to boundary (for asymptotes)
                 else:
-                    # If out of bounds finish drawing the line segment then reset
-                    if len(segment) > 1:
+                    if py < min_y:
+                        clipped_py = min_y
+                    elif py > max_y - 10:
+                        clipped_py = max_y
+
+                    if len(segment) > 0:
+                        # Extend to the boundary
+                        segment.append((px, clipped_py))
                         drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
+
+                    # Reset segment for the next branch
                     segment = []
                     prev_py = None
+
 
             # Ensure there are no segments left undrawn
             if len(segment) > 1:
