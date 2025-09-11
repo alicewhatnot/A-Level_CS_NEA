@@ -1,5 +1,5 @@
 import pygame
-from settings import UI_FONT, COLOUR_BUTTON, COLOUR_BOX, COLOUR_TEXT, SUPERSCRIPT_MAP, IGNORE_KEYS
+from settings import UI_FONT, UI_FONT_SMALL, COLOUR_BUTTON, COLOUR_BOX, COLOUR_TEXT, SUPERSCRIPT_MAP, IGNORE_KEYS
 
 
 class InputBox:
@@ -192,11 +192,12 @@ class Checkbox:
         return self.checked
 
 class Button:
-    def __init__(self, x, y, w, h, text=""):
+    def __init__(self, x, y, w, h, text="", small=False):
         self.rect = pygame.Rect(x, y, w, h)
         self.text = text
         self.scale = 1.0
         self.hover_scale = 1.05  
+        self.small = small
 
     def update(self, mouse_pos):
         """
@@ -217,7 +218,10 @@ class Button:
         scaled_rect.center = self.rect.center  
 
         pygame.draw.rect(screen, COLOUR_BUTTON, scaled_rect)
-        txt_surf = UI_FONT.render(self.text, True, (0, 0, 0))
+        if self.small:
+            txt_surf = UI_FONT_SMALL.render(self.text, True, (0, 0, 0))
+        else:
+            txt_surf = UI_FONT.render(self.text, True, (0, 0, 0))
         text_rect = txt_surf.get_rect(center=scaled_rect.center)
         screen.blit(txt_surf, text_rect.topleft)
 

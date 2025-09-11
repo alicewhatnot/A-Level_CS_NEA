@@ -23,8 +23,8 @@ from settings import load_assets
 
 arrow_img, tick_img = load_assets()
 
-function_text = Text(20,50, "Enter Function")
-function_box = InputBox(20, 90, 305, 60, font=MATHS_FONT)
+function_text = Text(20,30, "Enter Function")
+function_box = InputBox(20, 70, 305, 60, font=MATHS_FONT)
 
 differentiate_button = Button(20, 170, 140, 32, "Differentiate")
 reset_button = Button(170, 170, 140, 32, "Reset")
@@ -51,6 +51,7 @@ y_shift_text = Text(20, 530, "Shift amount")
 y_shift_box = InputBox(240, 525, 48, 32, text="0", center_text=True)
 
 submit_trans_button = Button(20, 600, 305, 40, "Submit Transformations")
+deg_rad_button = Button(30, 140, 80, 20, "Degrees", small=True)
 
 user_function_text = ""
 
@@ -80,6 +81,8 @@ current_function_colour = None
 current_tab = "transformations"
 previous_transformations = []
 current_displayed_function = None
+use_degrees = True
+trig = False
 derivative_order = 0
 dual_view = False
 
@@ -89,11 +92,11 @@ while running:
     pygame.draw.rect(screen, COLOUR_SIDEBAR, (0, 0, SIDEBAR_WIDTH, HEIGHT))
 
     # Checking whether the graph should use degrees
-    use_degrees = False
-    if current_displayed_function and not dual_view:
+    trig = False
+    if current_displayed_function:
         function_tree = current_displayed_function.getFunction()
         if containsTrigFunction(function_tree):
-            use_degrees = True
+            trig = True
 
     # Checking the variable to display on the axis
     if current_displayed_function:
@@ -103,9 +106,9 @@ while running:
 
     # Drawing the graph
     if current_variable == None:
-        drawGraphArea(screen, derivative_order, dual_view, use_degrees=use_degrees, variable="x")
+        drawGraphArea(screen, derivative_order, dual_view, use_degrees=use_degrees, trig=trig, variable="x")
     else:
-        drawGraphArea(screen, derivative_order, dual_view, use_degrees=use_degrees, variable=current_variable)
+        drawGraphArea(screen, derivative_order, dual_view, use_degrees=use_degrees, trig=trig, variable=current_variable)
 
     # Updating the animating controller to display a function once entered
     if function_entered:
@@ -129,6 +132,15 @@ while running:
             current_function_colour = random.choice(FUNCTION_COLOURS)
         if not function_box.getText().strip():
             current_function_colour = None
+
+        # Change from using degrees to not or vice versa
+        if deg_rad_button.isClicked(event):
+            use_degrees = not use_degrees
+            if use_degrees:
+                deg_rad_button.text = "Degrees"
+            else:
+                deg_rad_button.text = "Radians"
+
 
         # Submit function
         if (event.type == pygame.KEYDOWN and function_box.active):
@@ -178,7 +190,7 @@ while running:
                 
 
         # Submit transformations
-        if submit_trans_button.isClicked(event) and function_entered:
+        if submit_trans_button.isClicked(event) and function_entered and current_tab == "transformations":
 
             # Clear the animation queue before adding
             animation_controller.queue.clear()
@@ -197,7 +209,7 @@ while running:
             print("Transformations queued for animation")
 
         # Differentiate
-        if differentiate_button.isClicked(event) and function_entered:
+        if differentiate_button.isClicked(event) and function_entered and current_tab == "differentiation":
             # Special case of animation controller in which no animation occurs
             # Higher derivative orders require a lot of processing due to reccursion so are avoided
             if derivative_order < 4:
@@ -272,6 +284,7 @@ while running:
         y_reflect.draw(screen)
 
         submit_trans_button.draw(screen)
+        deg_rad_button.draw(screen)
         dual_view = False
 
     # Differentiation specific

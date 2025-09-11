@@ -2,7 +2,7 @@ import pygame
 import math
 from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, GRAPH_FONT, GRAPH_AXIS_FONT, COLOUR_BACKGROUND, COLOUR_GRAPH_SEPARATOR, COLOUR_AXIS
 
-def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", font=[GRAPH_FONT, GRAPH_AXIS_FONT], scale=40, use_degrees=False):
+def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", font=[GRAPH_FONT, GRAPH_AXIS_FONT], scale=40, use_degrees=False, trig=False):
     """
     Draws the graph background and axes with numbering in degrees if needed
     Single or dual view
@@ -11,7 +11,7 @@ def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", fon
     grid_color = COLOUR_GRAPH_SEPARATOR
 
     def draw_axes(center_x, center_y, left, top, width, height, bottom_graph=False,
-                  clip_bottom=None, scale=40, font=[GRAPH_FONT, GRAPH_AXIS_FONT], use_degrees=False):
+                  clip_bottom=None, scale=40, font=[GRAPH_FONT, GRAPH_AXIS_FONT], use_degrees=False, trig=False):
         """
         Draws X and Y axes
         """
@@ -39,14 +39,14 @@ def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", fon
         screen.blit(y_label_surface, y_label_rect.topleft)
 
         # Draw X-axis numbers
-        if use_degrees:
+        if trig:
             # Draw the degrees axis
             # Converts from radians as the same is done on the graphing end, the actual graph is in radians
             step_radians = math.pi / 2
             num_steps = (width // scale) // 2
-            for index in range(-num_steps, num_steps + 1):
+            for index in range(-num_steps, num_steps - 4):
                 # Dont draw 0s to avoid axis overlap
-                if index in [0, -num_steps, num_steps]:
+                if index in [0, -num_steps, num_steps, num_steps]:
                     continue
 
                 # Convert the index to a radian value then convert to a pixel position            
@@ -57,13 +57,37 @@ def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", fon
                 if px < left + 5 or px > left + width - 5:
                     continue
 
+                if use_degrees:
+                    # Degree labels
+                    label  = f"{int(math.degrees(rad_value))}°"
+                else:
+                    # π fraction labels step π/2
+                    numerator = index
+                    denominator = 2
+
+                    # Simplify if numerator divisible by denominator
+                    if numerator % denominator == 0:
+                        label = f"{numerator // denominator}π"
+                    else:
+                        if numerator == 1:
+                            label = "π/2"
+                        elif numerator == -1:
+                            label = "-π/2"
+                        else:
+                            label = f"{numerator}π/2"
+
+                    # Make negatives look better
+                    if label == "1π":
+                        label = "π"
+                    elif label == "-1π":
+                        label = "-π"
                 # Then convert to degrees and render the label slightly below the axis
-                deg_label = int(math.degrees(rad_value))
-                text_surface = font[0].render(str(deg_label), True, axis_color)
+                text_surface = font[0].render(str(label), True, axis_color)
                 text_rect = text_surface.get_rect(center=(px, center_y + 8 + text_surface.get_height()//2))
                 screen.blit(text_surface, text_rect.topleft)
+
         else:
-            # Draw X-axis numbers
+            # Draw X-axis numbers when no trig
             num_x_numbers = width // scale
             for index in range(-num_x_numbers//2, num_x_numbers//2 + 1):
 
@@ -99,7 +123,7 @@ def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", fon
         pygame.draw.rect(screen, COLOUR_BACKGROUND, graph_rect)
         center_x = SIDEBAR_WIDTH + (WIDTH - SIDEBAR_WIDTH)//2
         center_y = HEIGHT//2
-        draw_axes(center_x, center_y, SIDEBAR_WIDTH, 0, WIDTH - SIDEBAR_WIDTH, HEIGHT, scale=scale, font=font, use_degrees=use_degrees)
+        draw_axes(center_x, center_y, SIDEBAR_WIDTH, 0, WIDTH - SIDEBAR_WIDTH, HEIGHT, scale=scale, font=font, use_degrees=use_degrees, trig=trig)
 
     # Dual view 
     else:
@@ -113,14 +137,14 @@ def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", fon
         top_center_y = graph_height // 2
         pygame.draw.rect(screen, COLOUR_BACKGROUND, (graph_left, 0, graph_width, graph_height))
         draw_axes(top_center_x, top_center_y, graph_left, 0, graph_width, graph_height,
-                  clip_bottom=graph_height - separator_gap, scale=scale, font=font, use_degrees=False)
+                  clip_bottom=graph_height - separator_gap, scale=scale, font=font, use_degrees=False, trig=trig)
 
         # Bottom graph
         bottom_center_x = graph_left + graph_width // 2
         bottom_center_y = graph_height + graph_height // 2
         pygame.draw.rect(screen, COLOUR_BACKGROUND, (graph_left, graph_height, graph_width, graph_height))
         draw_axes(bottom_center_x, bottom_center_y, graph_left, graph_height + separator_gap,
-                  graph_width, graph_height, bottom_graph=True, clip_bottom=HEIGHT, scale=scale, font=font, use_degrees=False)
+                  graph_width, graph_height, bottom_graph=True, clip_bottom=HEIGHT, scale=scale, font=font, use_degrees=False, trig=trig )
 
         # Draw separator lines
         pygame.draw.line(screen, grid_color, (graph_left, graph_height - separator_gap), (WIDTH, graph_height - separator_gap), 1)
