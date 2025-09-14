@@ -104,66 +104,64 @@ def postfixToAST(postfix_queue):
     # The remaining node is the root of the AST
     print ("AST Created")
     return node_stack.pop()
-    
-def evaluateAST(node, variable_value, variable, convert_degrees=False):
+
+def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=False):
     """
     Recursively evaluates AST for a given value along the axis
     """
     if node is None:
         return None
 
-    # Convert the node value to degrees if required
-    if convert_degrees and node.type == "NAME" and node.value == variable:
-        variable_value = math.degrees(variable_value)
-    else:
-        variable_value = variable_value
-
     # Return the number 
     if node.type == "NUMBER":
-        return float(node.value)
+        val = float(node.value)
+        # Only converts numeric values to radians and only if within a trig function
+        if use_degrees and inside_trig:
+            return math.radians(val)  
+        return val
 
     # Return the value of the variable at that point along the axis
     if node.type == "NAME" and node.value == variable:
-        return variable_value
+        return float(variable_value)
 
+    # Operators
     if node.type == "OP":
         # Fetch value of the left and right nodes
-        left = evaluateAST(node.left, variable_value, variable, convert_degrees)
-        right = evaluateAST(node.right, variable_value, variable, convert_degrees)
+        left = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig)
+        right = evaluateAST(node.right, variable_value, variable, use_degrees, inside_trig)
 
         if left is None or right is None:
             return None
 
-        # Perform the operators
-        if node.value == "+":
-            return left + right
-        elif node.value == "-":
-            return left - right
-        elif node.value == "*":
-            return left * right
-        elif node.value == "/":
-            try:
-                return left / right  
-            except: 
-                return None
-        elif node.value == "**":
-            try:
+        try:
+            # Perform the operators
+            if node.value == "+": 
+                return left + right
+            elif node.value == "-": 
+                return left - right
+            elif node.value == "*": 
+                return left * right
+            elif node.value == "/": 
+                return left / right
+            elif node.value == "**": 
                 return left ** right
-            except:
-                return None
+        except Exception:
+            return None
 
     # Evaluate the functions
     if node.type == "FUNCTION":
-        argument = evaluateAST(node.left, variable_value, variable, convert_degrees = True)
-        argument = math.radians(argument)
-        if node.value == "sin":
+        # When evaluating inside trig, set inside_trig=True
+        argument = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig=True)
+        if argument is None:
+            return None
+        if node.value == "sin": 
             return math.sin(argument)
-        elif node.value == "cos":
+        elif node.value == "cos": 
             return math.cos(argument)
-        elif node.value == "tan":
+        elif node.value == "tan": 
             return math.tan(argument)
-    return None
 
+    return None
 
 def copyAST(node):
     """

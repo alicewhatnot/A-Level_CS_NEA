@@ -53,7 +53,7 @@ class GraphPlotter:
         """
         self.functions.append(function_object)
 
-    def drawAll(self, screen, dual_view=False, top_function=None, bottom_function=None):
+    def drawAll(self, screen, dual_view=False, top_function=None, bottom_function=None, use_degrees=False):
         """
         Draws either a single graph or a dual-view graph
         """
@@ -68,18 +68,21 @@ class GraphPlotter:
             if top_function:
                 self.drawFunction(
                     screen, top_function,
-                    y_offset=0, graph_height=graph_height,
-                    
+                    y_offset=0, 
+                    graph_height=graph_height,
+                    use_degrees=use_degrees
                 )
 
             # Bottom draws bottom function
             if bottom_function:
                 self.drawFunction(
                     screen, bottom_function,
-                    y_offset=graph_height, graph_height=graph_height,
+                    y_offset=graph_height, 
+                    graph_height=graph_height,
+                    use_degrees=use_degrees
                 )
 
-    def drawFunction(self, screen, function_object, color_override=None, y_offset=0, graph_height=None):
+    def drawFunction(self, screen, function_object, color_override=None, y_offset=0, graph_height=None, use_degrees=False):
         """
         Draws a given function
         Takes colour override, y offset and graph height if required
@@ -117,7 +120,7 @@ class GraphPlotter:
                 # For each x value,
                 x_val = (px - center_x) / scale
                 # The y value is the function evaluated at that x value
-                y_val = evaluateAST(function_tree, x_val, variable)
+                y_val = evaluateAST(function_tree, x_val, variable, use_degrees=use_degrees)
 
                 # Handles discontinuous functions
                 if y_val is None or math.isnan(y_val) or math.isinf(y_val):

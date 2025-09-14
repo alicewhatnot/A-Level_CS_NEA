@@ -22,7 +22,10 @@ class AnimationController:
         self.top_function = None
         self.bottom_function = None
         self.differentiating = False
+        self.use_degrees =  True
 
+    def setUseDegrees(self, flag):
+            self.use_degrees = flag
 
     def addTransformManager(self, transform_manager):
         """
@@ -72,7 +75,8 @@ class AnimationController:
                 screen,
                 dual_view=True,
                 top_function=top_func,
-                bottom_function=bottom_func
+                bottom_function=bottom_func,
+                use_degrees=self.use_degrees
             )
 
             # If differentiating don't draw
@@ -84,10 +88,10 @@ class AnimationController:
             now = pygame.time.get_ticks()
             # Draw original function with a gray override
             self.graph_plotter.drawFunction(
-                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150)
+                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees
             )
             # Draw the transformed function as is
-            self.graph_plotter.drawFunction(screen, self.current_function)
+            self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
 
             # If the time from start is the amount given by gap then end gap
             if now - self.gap_start_time >= self.gap:
@@ -102,14 +106,14 @@ class AnimationController:
             if self.current_function:
                 if dual_view:
                     # Draw top as base function, bottom as derivative if exists
-                    self.graph_plotter.drawAll(screen, dual_view=True, top_function=top_func, bottom_function=bottom_func)
+                    self.graph_plotter.drawAll(screen, dual_view=True, top_function=top_func, bottom_function=bottom_func, use_degrees=self.use_degrees)
                 else:
                     # Draw gray old function and the current transformed function
-                    self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150))
-                    self.graph_plotter.drawFunction(screen, self.current_function)
+                    self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees)
+                    self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
             else:
                 # If no function then draw whatever is in graph plotter
-                self.graph_plotter.drawAll(screen, dual_view=dual_view)
+                self.graph_plotter.drawAll(screen, dual_view=dual_view, use_degrees=self.use_degrees)
             return
 
         # Calculates how far along the animation is
@@ -131,14 +135,14 @@ class AnimationController:
 
             # Draw the final frame for the first tick of the gap
             self.graph_plotter.drawFunction(
-                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150)
+                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees
             )
-            self.graph_plotter.drawFunction(screen, self.current_function)
+            self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
             return
 
         # Draw intermediate frame of gray original and intermediate animated function
-        self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150))
-        self.graph_plotter.drawFunction(screen, intermediate_function)
+        self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees)
+        self.graph_plotter.drawFunction(screen, intermediate_function, use_degrees=self.use_degrees)
 
     def applyTransformation(self, base_function, transformation, progress):
         # Calculates the intermediate functions from original -> transformed

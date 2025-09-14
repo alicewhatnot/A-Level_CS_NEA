@@ -136,6 +136,7 @@ while running:
         # Change from using degrees to not or vice versa
         if deg_rad_button.isClicked(event):
             use_degrees = not use_degrees
+            animation_controller.setUseDegrees(use_degrees)
             if use_degrees:
                 deg_rad_button.text = "Degrees"
             else:
