@@ -43,7 +43,6 @@ class InputBox:
                 mods = pygame.key.get_mods()
                 if mods & pygame.KMOD_CTRL:
                     # Delete all text if CTRL pressed also
-
                     self.text = ""
                     self.display_text = ""
                     self.superscript_mode = False
@@ -51,17 +50,22 @@ class InputBox:
                     if not self.text:
                         return
                     # Remove last character from text
+                    removed_char = self.text[-1]
                     self.text = self.text[:-1]
 
-                    # Rebuild display text to avoid out of sync issues
-                    self.display_text = self.buildDisplayText(self.text)
-
-                    # Update superscript mode if last char was ^
-                    self.superscript_mode = self.text.endswith('^')
+                    # Remove last character from display_text
+                    if removed_char == "^":
+                        # Removed ^ does not appear in display_text
+                        self.superscript_mode = False
+                    elif self.superscript_mode:
+                        self.display_text = self.display_text[:-1]
+                    else:
+                        self.display_text = self.display_text[:-1]
 
             # If the key is one that should be added to the input field
             elif event.key not in IGNORE_KEYS:
                 char = event.unicode
+
                 if char == "^":
                     # Add ^ to the text if valid but not display text
                     if self.text and (self.text[-1].isalnum() or self.text[-1] == ")"):
@@ -69,37 +73,18 @@ class InputBox:
                         self.superscript_mode = True
                 else:
                     # Adds other characters to display_text and text
+                    self.text += char
                     if self.superscript_mode:
                         self.display_text += SUPERSCRIPT_MAP.get(char, char)
-                        self.text += char
                     else:
-                        self.text += char
                         self.display_text += char
 
-            # Rebuild display_text at the end to avoid sync issues
-            self.display_text = self.buildDisplayText(self.text)
+            # Update the rendered surface
             self.txt_surface = self.font.render(self.display_text, True, self.text_colour)
 
             # Reset cursor blink after typing
             self.cursor_visible = True
             self.cursor_timer = 0
-
-    def buildDisplayText(self, text):
-        """
-        Rebuilds display_text from text, applying superscript after ^
-        """
-        result = ""
-        superscript_next = False
-        for character in text:
-            if character == "^":
-                superscript_next = True
-            else:
-                if superscript_next:
-                    result += SUPERSCRIPT_MAP.get(character, character)
-                    superscript_next = False
-                else:
-                    result += character
-        return result
 
     def update(self, change_in_time):
         """
@@ -161,6 +146,7 @@ class InputBox:
         Returns the current text in the input box
         """
         return self.text
+
 
 class Checkbox:
     def __init__(self, x, y, w, h, label="", tick_img=None):
