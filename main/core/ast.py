@@ -105,7 +105,7 @@ def postfixToAST(postfix_queue):
     print ("AST Created")
     return node_stack.pop()
 
-def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=False):
+def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=False ,needs_converting=True):
     """
     Recursively evaluates AST for a given value along the axis
     """
@@ -115,8 +115,8 @@ def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=F
     # Return the number 
     if node.type == "NUMBER":
         val = float(node.value)
-        # Only converts numeric values to radians and only if within a trig function
-        if use_degrees and inside_trig:
+        # Converts to radians if is degrees and is not mul / div by the variable
+        if use_degrees and inside_trig and needs_converting:
             return math.radians(val)  
         return val
 
@@ -126,9 +126,20 @@ def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=F
 
     # Operators
     if node.type == "OP":
+        #Determine if children needs converting
+        left_needs_converting = needs_converting
+        right_needs_converting = needs_converting
+
+        # Dont convert children if they're mul / div the variable
+        if inside_trig and node.value in ("*", "/"):
+            if node.left.type == "NUMBER" and node.right.type == "NAME":
+                left_needs_converting = False
+            elif node.left.type == "NAME" and node.right.type == "NUMBER":
+                right_needs_converting = False
+
         # Fetch value of the left and right nodes
-        left = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig)
-        right = evaluateAST(node.right, variable_value, variable, use_degrees, inside_trig)
+        left = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig, left_needs_converting)
+        right = evaluateAST(node.right, variable_value, variable, use_degrees, inside_trig, right_needs_converting)
 
         if left is None or right is None:
             return None
@@ -160,7 +171,6 @@ def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=F
             return math.cos(argument)
         elif node.value == "tan": 
             return math.tan(argument)
-
     return None
 
 def copyAST(node):

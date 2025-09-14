@@ -1,4 +1,5 @@
 from core.ast import ASTNode
+import math 
 
 def reflectXAxis(node):
     """
@@ -32,6 +33,7 @@ def shiftX(node, shift):
     """
     Shifts the function along the X-axis by subtracting the shift value 
     """
+    shift = math.degrees(shift)
     if node is None:
         return None
     elif node.type == "NAME":
