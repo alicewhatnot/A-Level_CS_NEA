@@ -214,11 +214,12 @@ while running:
             # Special case of animation controller in which no animation occurs
             # Higher derivative orders require a lot of processing due to reccursion so are avoided
             if derivative_order < 4:
-                animation_controller.differentiate()
+                success = animation_controller.differentiate()
 
                 # Then order increased to 1 for representation on the graph axis            
-                derivative_order += 1
-                print(f"Differentiation queued. Now at order {derivative_order}")
+                if success:
+                    derivative_order += 1
+                    print(f"Differentiation queued. Now at order {derivative_order}")
 
         # Reset differentiation
         if reset_button.isClicked(event) and function_entered:

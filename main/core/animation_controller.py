@@ -183,7 +183,7 @@ class AnimationController:
     # Specific method for differentiating
     def differentiate(self):
         if not self.transform_manager:
-            return
+            return False
 
         # Make a copy of the current function to use on the top graph
         previous_derivative = Function(
@@ -197,6 +197,9 @@ class AnimationController:
             Function(copyAST(previous_derivative.getFunction()), previous_derivative.getFunctionVar(), previous_derivative.getColour())
         ).ModifyFunction()
 
+        if new_derivative == None:
+            return False
+        
         # Update the transform manager
         self.transform_manager.setBaseFunction(new_derivative)
 
@@ -207,3 +210,5 @@ class AnimationController:
         self.top_function = previous_derivative
         self.bottom_function = new_derivative
         self.differentiating = True
+
+        return True

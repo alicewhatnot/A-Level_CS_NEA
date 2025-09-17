@@ -18,6 +18,8 @@ class DifferentiateFunction(ModifyFunction):
         Applies differentiation to the function AST
         """
         new_tree = differentiate(self.altered_function.getFunction())
+        if new_tree is None:
+            return None
         self.altered_function.setFunction(new_tree)
         return self.altered_function
 

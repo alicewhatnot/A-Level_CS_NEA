@@ -18,26 +18,28 @@ def validTransformation(value, type):
             if token[0] == "NAME":
                 contains_name = True
                 return False
-
+            
    # Checking if the value is none
     if value == "":
         return False
     
     # Checking if the value is default, if so the transformation should be skipped
-    if not contains_name:
-        if type == "shift" and eval(value) == 0:
-            return False
-        elif type == "stretch" and eval(value) == 1:
-            return False
-        elif type == "reflect" and value is False:
-            return False
-        
-        # Checking if stretching by scale factor 0
-        elif type == "stretch" and eval(value) == 0:
-            return False
-        else:
-            return True
-
+    try:
+        if not contains_name:
+            if type == "shift" and eval(value) == 0:
+                return False
+            elif type == "stretch" and eval(value) == 1:
+                return False
+            elif type == "reflect" and value is False:
+                return False
+            
+            # Checking if stretching by scale factor 0
+            elif type == "stretch" and eval(value) == 0:
+                return False
+            else:
+                return True
+    except:
+        return False
     return False
 
 def enqueueTransformations(x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect):
