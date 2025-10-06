@@ -34,10 +34,33 @@ def tokenize(expression):
             match = pattern.match(expression, index)
             if match:
                 characters = match.group(0)
+
+                # Special handling for single minus number
+                if token == "OP" and characters == "-":
+                    # Single number if at start or after another operator or after '('
+                    if len(tokens) == 0 or tokens[-1][0] in ("OP", "LEFTPARENTHESIS"):
+                        # Look ahead for a number
+                        num_match = patterns["NUMBER"].match(expression, index + 1)
+                        if num_match:
+                            num_str = num_match.group(0)
+                            # Insert tokens for (0 - num)
+                            tokens.append(("LEFTPARENTHESIS", "("))
+                            tokens.append(("NUMBER", "0"))
+                            tokens.append(("OP", "-"))
+                            tokens.append(("NUMBER", num_str))
+                            tokens.append(("RIGHTPARENTHESIS", ")"))
+
+                            # Skip past "-" and number now
+                            index += 1 + len(num_str)
+                            matched = True
+                            break
+
+                # Normal case
                 tokens.append((token, characters))
                 index += len(characters)
                 matched = True
                 break
+
         if not matched:
             valid_characters = False
     
