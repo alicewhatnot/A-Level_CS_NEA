@@ -159,7 +159,6 @@ class GraphPlotter:
                     segment = []
                     prev_py = None
 
-
             # Ensure there are no segments left undrawn
             if len(segment) > 1:
                 drawLine(screen, colour, segment, thickness=LINE_THICKNESS)
