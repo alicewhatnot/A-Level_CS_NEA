@@ -146,6 +146,9 @@ while running:
         # Submit function
         if (event.type == pygame.KEYDOWN and function_box.active):
 
+            # Reset error colour 
+            function_box.setError(False)
+
             # Text recieved, passed to an object responsible for creating function objects from user input
             user_function_text = function_box.getText()
             user_function_entry = FunctionEntry(user_function_text) 
@@ -212,14 +215,18 @@ while running:
         # Differentiate
         if differentiate_button.isClicked(event) and function_entered and current_tab == "differentiation":
             # Special case of animation controller in which no animation occurs
-            # Higher derivative orders require a lot of processing due to reccursion so are avoided
+            # Higher derivative orders require a lot of processing due to recursion so are avoided
             if derivative_order < 4:
                 success = animation_controller.differentiate()
 
                 # Then order increased to 1 for representation on the graph axis            
                 if success:
+                    function_box.setError(False)
                     derivative_order += 1
                     print(f"Differentiation queued. Now at order {derivative_order}")
+                else:
+                    # Turn input box red if unsuccessful input
+                    function_box.setError(True) 
 
         # Reset differentiation
         if reset_button.isClicked(event) and function_entered:
@@ -244,6 +251,8 @@ while running:
         # Allowing the user to change tabs between the two modes
         if transformation_tab_button.isClicked(event):
             current_tab = "transformations"
+            # Reset error colour 
+            function_box.setError(False)
 
         if differentiation_tab_button.isClicked(event):
             current_tab = "differentiation"

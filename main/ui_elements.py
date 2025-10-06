@@ -147,6 +147,15 @@ class InputBox:
         """
         return self.text
 
+    def setError(self, error=True):
+        """
+        Turns the border red if error, otherwise resets it
+        """
+        if error:
+            self.border_colour = (255, 0, 0)  
+        else:
+            self.border_colour = COLOUR_BOX
+
 
 class Checkbox:
     def __init__(self, x, y, w, h, label="", tick_img=None):
