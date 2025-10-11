@@ -33,7 +33,6 @@ def shiftX(node, shift):
     """
     Shifts the function along the X-axis by subtracting the shift value 
     """
-    shift = math.degrees(shift)
     if node is None:
         return None
     elif node.type == "NAME":
@@ -45,6 +44,7 @@ def shiftX(node, shift):
         if node.right:
             node.right = shiftX(node.right, shift)
         return node
+
 
 
 def shiftY(node, shift):
