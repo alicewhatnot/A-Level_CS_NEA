@@ -48,6 +48,12 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Icon
+icon_path = os.path.join(BASE_DIR, "assets", "icon.png")  
+icon_surface = pygame.image.load(icon_path)
+pygame.display.set_icon(icon_surface)
+pygame.display.set_caption("Transformation Animator")
+
 # Fonts
 font_path = os.path.join(BASE_DIR, "assets", "STIXTwoText-Italic.otf")
 MATHS_FONT = pygame.font.Font(font_path, 50)

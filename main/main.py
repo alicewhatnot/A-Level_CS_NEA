@@ -16,7 +16,7 @@ from graph_ui import drawGraphArea
 pygame.init()
 pygame.key.set_repeat(300, 50)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Function Transformation UI")
+pygame.display.set_caption("Transformation Animator")
 from settings import load_assets
 
 # UI Elements & Assets

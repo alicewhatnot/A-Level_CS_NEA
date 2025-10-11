@@ -4,7 +4,7 @@
 import sys
 from PyInstaller.utils.hooks import collect_submodules
 
-entry_script = 'main.py'  # your entry point
+entry_script = 'main.py' 
 
 hidden_imports = collect_submodules('pygame')
 
@@ -34,15 +34,16 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='graphapp',
+    name='TransformationAnimator',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,  # True if you want a console window
+    console=False,  
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='assets/icon.ico',
 )
