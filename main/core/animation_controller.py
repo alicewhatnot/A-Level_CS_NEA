@@ -89,31 +89,23 @@ class AnimationController:
         # Gap between animations
         if self.in_gap:
             now = pygame.time.get_ticks()
-            # Draw original function with a gray override
-            self.graph_plotter.drawFunction(
-                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees
-            )
-            # Draw the transformed function as is
+
+            # Draw original and current function
+            self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(),
+                                            color_override=(150,150,150), use_degrees=self.use_degrees)
             self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
 
-            # Stay in gap if paused
+            # Don't leave gap if paused
             if self.paused:
-                # Draw everything as is
-                self.graph_plotter.drawFunction(
-                    screen, self.graph_plotter.getBaseFunction(),
-                    color_override=(150,150,150), use_degrees=self.use_degrees
-                )
-                self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
-                return
+                return 
 
-            # Keep checking for if theres no gap timer or pause pending
+            # If pending pause when leaving gap then don't leave
             if now - self.gap_start_time >= self.gap:
                 if self.pending_pause:
-                    self.paused = True
                     self.pending_pause = False
-                    return
+                    self.paused = True
                 else:
-                    # If gap timer up and no pause then continue
+                    # Otherwise leave
                     self.in_gap = False
                     self.startNext()
             return
@@ -231,16 +223,20 @@ class AnimationController:
 
         return True
     
-    def pause(self):
-        """
-        Toggles pause/resume that only happens in an animation gap
-        """
-    
-        if not self.paused:
-            # Pause once current animation step ends
-            self.pending_pause = True
-        else:
-            # Resume 
+    def toggle_pause(self):
+        """Pause or resume animation in a safe way."""
+        if self.paused or self.pending_pause:
             self.paused = False
             self.pending_pause = False
+        else:
+            if self.animating:
+                self.pending_pause = True
+            elif self.in_gap:
+                self.paused = True
 
+    def force_resume(self):
+        """
+        Resume from pause if any, for use when wiping animation
+        """
+        self.paused = False
+        self.pending_pause = False

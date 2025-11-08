@@ -200,11 +200,12 @@ while running:
         if submit_trans_button.isClicked(event) and function_entered and current_tab == "transformations":
 
             # Clear the animation queue before adding
+            animation_controller.force_resume()
+            pause_button.setState(True)
             animation_controller.queue.clear()
-
             animation_controller.animating = False
             animation_controller.current_function = None
-
+            
             transform_manager.addTransformations(
                 x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
             )
@@ -217,12 +218,8 @@ while running:
 
         #Pausing
         if pause_button.handle_event(event):
-            if pause_button.toggled:
-                print("Paused")
-                animation_controller.pause() 
-            else:
-                print("Playing")
-                animation_controller.pause()
+            animation_controller.toggle_pause()
+
 
         # Differentiate
         if differentiate_button.isClicked(event) and function_entered and current_tab == "differentiation":
@@ -270,6 +267,8 @@ while running:
             current_tab = "differentiation"
 
             # Stop any animations that might be occuring
+            animation_controller.force_resume()
+            pause_button.setState(True)
             animation_controller.queue.clear()
             animation_controller.animating = False
             animation_controller.current_function = current_displayed_function

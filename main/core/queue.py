@@ -30,7 +30,7 @@ class Queue:
         return self.size == self.max_size
     
     def clear(self):
-        while not self.isEmpty:
+        while not self.isEmpty():
             self.dequeue()
     
     

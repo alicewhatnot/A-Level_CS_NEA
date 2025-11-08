@@ -278,3 +278,9 @@ class PlayPauseButton(Button):
             self.toggled = not self.toggled
             return True
         return False
+
+    def setState(self, playing):
+        """
+        Force state
+        """
+        self.toggled = playing
