@@ -22,7 +22,10 @@ class AnimationController:
         self.top_function = None
         self.bottom_function = None
         self.differentiating = False
-        self.use_degrees =  True
+        self.use_degrees =  True      
+        self.paused = False
+        self.pending_pause = False
+
 
     def setUseDegrees(self, flag):
             self.use_degrees = flag
@@ -93,11 +96,26 @@ class AnimationController:
             # Draw the transformed function as is
             self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
 
-            # If the time from start is the amount given by gap then end gap
+            # Stay in gap if paused
+            if self.paused:
+                # Draw everything as is
+                self.graph_plotter.drawFunction(
+                    screen, self.graph_plotter.getBaseFunction(),
+                    color_override=(150,150,150), use_degrees=self.use_degrees
+                )
+                self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
+                return
+
+            # Keep checking for if theres no gap timer or pause pending
             if now - self.gap_start_time >= self.gap:
-                self.in_gap = False
-                # Next animation starts
-                self.startNext()   
+                if self.pending_pause:
+                    self.paused = True
+                    self.pending_pause = False
+                    return
+                else:
+                    # If gap timer up and no pause then continue
+                    self.in_gap = False
+                    self.startNext()
             return
 
 
@@ -212,3 +230,17 @@ class AnimationController:
         self.differentiating = True
 
         return True
+    
+    def pause(self):
+        """
+        Toggles pause/resume that only happens in an animation gap
+        """
+    
+        if not self.paused:
+            # Pause once current animation step ends
+            self.pending_pause = True
+        else:
+            # Resume 
+            self.paused = False
+            self.pending_pause = False
+

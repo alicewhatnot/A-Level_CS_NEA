@@ -13,6 +13,10 @@ def validTransformation(value, type):
     if type != "reflect":
         tokens = tokenize(value) 
         
+        # Only check tokens if they exist
+        if tokens == None:
+            return False
+
         # If NAME pattern in value, will be rejected
         for token in tokens:
             if token[0] == "NAME":

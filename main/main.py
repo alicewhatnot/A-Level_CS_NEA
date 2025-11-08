@@ -5,12 +5,11 @@ from core.transform_manager import TransformManager
 from core.animation_controller import AnimationController
 import random
 from core.ast import containsTrigFunction
-from core.queue import Queue
 import pygame
 import sys
 
 from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, FUNCTION_COLOURS
-from ui_elements import InputBox, Checkbox, Button, Text
+from ui_elements import InputBox, Checkbox, Button, Text, PlayPauseButton
 from graph_ui import drawGraphArea
 
 pygame.init()
@@ -24,31 +23,33 @@ from settings import load_assets
 arrow_img, tick_img = load_assets()
 
 function_text = Text(20,30, "Enter Function")
-function_box = InputBox(20, 70, 305, 60, font=MATHS_FONT)
+y_text = Text(20,70, "y", font=MATHS_FONT)
+equals_text = Text(55,60, "₌", font=MATHS_FONT)
+function_box = InputBox(90, 70, 245, 60, font=MATHS_FONT)
 
 differentiate_button = Button(20, 170, 140, 32, "Differentiate")
 reset_button = Button(170, 170, 140, 32, "Reset")
 
 in_x_axis = Text(20, 200, "X Axis")
 x_stretch_text = Text(20, 250, "Stretch scale factor")
-x_stretch_box = InputBox(240, 245, 48, 32, text="1", center_text=True)
+x_stretch_box = InputBox(260, 245, 48, 32, text="1", center_text=True)
 
 x_reflect_text = Text(20, 290, "Reflect X-axis")
-x_reflect = Checkbox(240, 285, 48, 32, tick_img=tick_img)
+x_reflect = Checkbox(260, 285, 48, 32, tick_img=tick_img)
 
-x_shift_text = Text(20, 330, "Shift amount")
-x_shift_box = InputBox(240, 325, 48, 32, text="0", center_text=True)
+x_shift_text = Text(20, 330, "Translation (shift) amount")
+x_shift_box = InputBox(260, 325, 48, 32, text="0", center_text=True)
 
 in_y_axis = Text(20, 400, "Y Axis")
 
 y_stretch_text = Text(20, 450, "Stretch scale factor")
-y_stretch_box = InputBox(240, 445, 48, 32, text="1", center_text=True)
+y_stretch_box = InputBox(260, 445, 48, 32, text="1", center_text=True)
 
 y_reflect_text = Text(20, 490, "Reflect Y-axis")
-y_reflect = Checkbox(240, 485, 48, 32, tick_img=tick_img)
+y_reflect = Checkbox(260, 485, 48, 32, tick_img=tick_img)
 
-y_shift_text = Text(20, 530, "Shift amount")
-y_shift_box = InputBox(240, 525, 48, 32, text="0", center_text=True)
+y_shift_text = Text(20, 530, "Translation (shift) amount")
+y_shift_box = InputBox(260, 525, 48, 32, text="0", center_text=True)
 
 submit_trans_button = Button(20, 600, 305, 40, "Submit Transformations")
 deg_rad_button = Button(30, 140, 80, 20, "Degrees", small=True)
@@ -56,7 +57,9 @@ deg_rad_button = Button(30, 140, 80, 20, "Degrees", small=True)
 user_function_text = ""
 
 transformation_tab_button = Button(20, HEIGHT - 60, 140, 40, "Transform")
-differentiation_tab_button = Button(180, HEIGHT - 60, 140, 40, "Differentiate")
+differentiation_tab_button = Button(185, HEIGHT - 60, 140, 40, "Differentiate")
+
+pause_button = PlayPauseButton(380, HEIGHT - 60, 48, 48)
 
 transform_to_ui = {
     ("stretch", "x"): x_stretch_box.rect,
@@ -212,6 +215,15 @@ while running:
                 animation_controller.enqueueAnimation(transformation)
             print("Transformations queued for animation")
 
+        #Pausing
+        if pause_button.handle_event(event):
+            if pause_button.toggled:
+                print("Paused")
+                animation_controller.pause() 
+            else:
+                print("Playing")
+                animation_controller.pause()
+
         # Differentiate
         if differentiate_button.isClicked(event) and function_entered and current_tab == "differentiation":
             # Special case of animation controller in which no animation occurs
@@ -271,9 +283,12 @@ while running:
     submit_trans_button.update(mouse_pos)
     transformation_tab_button.update(mouse_pos)
     differentiation_tab_button.update(mouse_pos)
+    pause_button.update(mouse_pos)
 
     # Drawing UI elements
     function_text.draw(screen)
+    y_text.draw(screen)
+    equals_text.draw(screen)
     function_box.draw(screen)
 
     # Transformation specific
@@ -296,6 +311,8 @@ while running:
 
         submit_trans_button.draw(screen)
         deg_rad_button.draw(screen)
+        pause_button.draw(screen)
+
         dual_view = False
 
     # Differentiation specific

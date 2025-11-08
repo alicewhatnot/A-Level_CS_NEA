@@ -1,5 +1,5 @@
 import pygame
-from settings import UI_FONT, UI_FONT_SMALL, COLOUR_BUTTON, COLOUR_BOX, COLOUR_TEXT, SUPERSCRIPT_MAP, IGNORE_KEYS
+from settings import UI_FONT, UI_FONT_SMALL, COLOUR_BUTTON, COLOUR_BOX, COLOUR_TEXT, SUPERSCRIPT_MAP, IGNORE_KEYS, COLOUR_SIDEBAR
 
 
 class InputBox:
@@ -227,17 +227,18 @@ class Button:
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
 
 class Text:
-    def __init__(self, x, y, text, colour=(0, 0, 0)):
+    def __init__(self, x, y, text, colour=(0, 0, 0), font=UI_FONT):
         self.x = x
         self.y = y
         self.text = text
         self.colour = colour
+        self.font = font
 
     def draw(self, screen):
         """
         Renders the text on the screen
         """
-        txt_surface = UI_FONT.render(self.text, True, self.colour)
+        txt_surface = self.font.render(self.text, True, self.colour)
         screen.blit(txt_surface, (self.x, self.y))
 
     def setText(self, new_text):
@@ -246,3 +247,34 @@ class Text:
         """
         self.text = new_text
 
+class PlayPauseButton(Button):
+    def __init__(self, x, y, w, h):
+        # Call parent constructor 
+        super().__init__(x, y, w, h, text="")
+        self.toggled = True
+
+    def draw(self, screen):
+        """
+        Override draw to use play/pause symbol instead of text
+        """
+        scaled_rect = self.rect.copy()
+        scaled_rect.width = 70
+        scaled_rect.height = 30
+        scaled_rect.center = self.rect.center
+
+        pygame.draw.rect(screen, COLOUR_SIDEBAR, scaled_rect)
+
+        # Play or pause icon, using default font to render properly
+        symbol = "PLAY" if not self.toggled else "PAUSE"
+        txt_surf = UI_FONT.render(symbol, True, (0, 0, 0))
+        text_rect = txt_surf.get_rect(center=scaled_rect.center)
+        screen.blit(txt_surf, text_rect)
+
+    def handle_event(self, event):
+        """
+        Toggles play/pause
+        """
+        if self.isClicked(event):  
+            self.toggled = not self.toggled
+            return True
+        return False
