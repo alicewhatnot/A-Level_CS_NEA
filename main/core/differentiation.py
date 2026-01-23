@@ -49,15 +49,28 @@ def differentiate(node):
                 coefficient = ASTNode("NUMBER", exponent.value, None, None)
                 product = ASTNode("OP", "*", coefficient, value_to_power)
                 return ASTNode("OP", "*", product, base_differentiated)
+            
+            elif exponent.type == "NAME" and base.type == "NUMBER":
+                # Implements the rule d/dx[a^x] = a^x * ln(a) to differentiate a numerical base to a variable exponent
+                # logarithms are not implemented in the parser as they are out of the scope of the project however implementation for this rule alone is simple as is not user facing
+                ln_base = ASTNode("FUNCTION", "ln", ASTNode("NUMBER", base.value, None, None), None)
+                value_to_power = ASTNode("OP", "**", ASTNode("NUMBER", base.value, None, None), exponent)
+                return ASTNode("OP", "*", value_to_power, ln_base)
+            
             else:
-                # Implementing the rule of a base to a non-numerical exponent is unnecessary and out of the scope of the project
                 return None
 
     # Differentiates a function using the chain rule (d/dx[f(g)] = f'g')
     elif node.type == "FUNCTION":
+        # if argument is a constant number, derivative is 0
+        # implemented for further derivatives of exponential functions
+        if node.left.type == "NUMBER":
+            return ASTNode("NUMBER", "0", None, None)
+    
         function = node.value
         argument = node.left
         argument_differentiated = differentiate(argument)
+
         # Uses the chain rule for the cases of sin and cos 
         if function == "sin":
             cos_node = ASTNode("FUNCTION", "cos", argument, None)
@@ -67,7 +80,13 @@ def differentiate(node):
             negative = ASTNode("NUMBER", "-1", None, None)
             negative_sin = ASTNode("OP", "*", sin_node, negative)
             return ASTNode("OP", "*", negative_sin, argument_differentiated)
-        # differentiating tan is out of the scope of the project and so will be unimplemented
+        
+        # Splits tan into sin/cos to differentiate
+        elif function == "tan":
+            cos_node = ASTNode("FUNCTION", "cos", argument, None)
+            cos_squared = ASTNode("OP", "**", cos_node, ASTNode("NUMBER", "2", None, None))
+            reciprocal = ASTNode("OP", "/", ASTNode("NUMBER", "1", None, None), cos_squared)
+            return ASTNode("OP", "*", reciprocal, argument_differentiated)
 
     # Safety catch if the node cannot be differentiated
     return None

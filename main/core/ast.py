@@ -171,6 +171,9 @@ def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=F
             return math.cos(argument)
         elif node.value == "tan": 
             return math.tan(argument)
+        elif node.value == "ln":
+            return math.log(argument)
+
     return None
 
 def copyAST(node):

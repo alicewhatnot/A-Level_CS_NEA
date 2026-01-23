@@ -44,14 +44,26 @@ SUBROUTINE differentiate(node)
                 product ← NEW ASTNode("OP", "*", coefficient, value_to_power)
                 RETURN NEW ASTNode("OP", "*", product, base_differentiated)
             
+            ELSE IF exponent.type = "NAME" AND base.type = "NUMBER" THEN
+                # Implements the rule d/dx[a^x] = a^x * ln(a) to differentiate a numerical base to a variable exponent
+                # Logarithms are not implemented in the parser as they are out of the scope of the project however implementation for this rule alone is simple as it is not user facing
+                
+                ln_base ← NEW ASTNode("FUNCTION", "ln", NEW ASTNode("NUMBER", base.value, NULL, NULL), NULL)
+                value_to_power ← NEW ASTNode("OP", "**", NEW ASTNode("NUMBER", base.value, NULL, NULL), exponent)
+                RETURN NEW ASTNode("OP", "*", value_to_power, ln_base)
+
             ELSE
-                // Implementing the rule of a base to a non-numerical exponent is unecessary and out of the scope of the project
                 RETURN NULL
             ENDIF
         ENDIF
     
     // Differentiates a function using the chain rule (d/dx[f(g)] = f'g')
     ELSE IF node.type = "FUNCTION" THEN
+        // If argument is a constant number, derivative is 0
+        // Implemented for further derivatives of exponential functions
+        IF node.left.type == "NUMBER" THEN
+            RETURN NEW ASTNode("NUMBER", "0", NULL, NULL)
+
         function ← node.value
         argument ← node.left
         argument_differentiated ← differentiate(argument)
@@ -66,8 +78,19 @@ SUBROUTINE differentiate(node)
             negative ← NEW ASTNode("NUMBER", "-1", NULL, NULL)
             negative_sin ← NEW ASTNode("OP", "*", sin_node, negative)
             RETURN NEW ASTNode("OP", "*", negative_sin, argument_differentiated)
+
+        // Splits tan into sin/cos to differentiate
+        ELSE IF function = "tan" THEN
+            cos_node ← NEW ASTNode("FUNCTION", "cos", argument, NULL)
+            exponent ← NEW ASTNode("NUMBER", "2", NULL, NULL)
+            cos_squared ← NEW ASTNode("OP", "**", cos_node, exponent)
+
+            one ← NEW ASTNode("NUMBER", "1", NULL, NULL)
+            reciprocal ← NEW ASTNode("OP", "/", one, cos_squared)
+
+            RETURN NEW ASTNode("OP", "*", reciprocal, argument_differentiated)
+
         ENDIF
-        // differentiating tan is out of the scope of the project and so will be unimplemented
     ENDIF
 
     // Safety catch if the node cannot be differentiated
