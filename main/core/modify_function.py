@@ -1,6 +1,6 @@
 from core.transformations import reflectXAxis, reflectYAxis, shiftX, shiftY, stretchX, stretchY
 from core.differentiation import differentiate
-
+from core.ast import simplifyAST
 # Base class for all types of function modification
 # Transformation classes inherit from ModifyFunction and implement polymorphism on its methods
 class ModifyFunction:
@@ -20,7 +20,10 @@ class DifferentiateFunction(ModifyFunction):
         new_tree = differentiate(self.altered_function.getFunction())
         if new_tree is None:
             return None
-        self.altered_function.setFunction(new_tree)
+        
+        # Simplifies the AST to reduce memory impact with successive derivatives
+        simplified_new_tree = simplifyAST(new_tree)
+        self.altered_function.setFunction(simplified_new_tree)
         return self.altered_function
 
 class ShiftFunction(ModifyFunction):

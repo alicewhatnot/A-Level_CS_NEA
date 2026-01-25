@@ -198,3 +198,112 @@ def containsTrigFunction(node):
     if node.type == "FUNCTION" and node.value in ("sin", "cos", "tan"):
         return True
     return containsTrigFunction(node.left) or containsTrigFunction(node.right)
+
+def simplifyAST(node):
+    """
+    Recursively simplifies an AST.
+    Designed to reduce excess nodes created from differentiation logic
+    """
+
+    if node is None:
+        return None
+
+    # Simplify children first (post-order traversal)
+    node.left = simplifyAST(node.left)
+    node.right = simplifyAST(node.right)
+
+    # Leaf nodes cannot be simplified
+    if node.type in ("NUMBER", "NAME"):
+        return node
+
+    # Simplifying logic for operators
+    if node.type == "OP":
+        op = node.value
+        left = node.left
+        right = node.right
+
+        # If the operator is calculable, e.g. 5*3 then return a number node of 15
+        # Reduces 3 nodes - OP, Left and Right to 1 node
+        if left and right and left.type == "NUMBER" and right.type == "NUMBER":
+            try:
+                a = float(left.value)
+                b = float(right.value)
+                if op == "+": return ASTNode("NUMBER", str(a + b))
+                if op == "-": return ASTNode("NUMBER", str(a - b))
+                if op == "*": return ASTNode("NUMBER", str(a * b))
+                if op == "/": return ASTNode("NUMBER", str(a / b))
+                if op == "**": return ASTNode("NUMBER", str(a ** b))
+            
+            except Exception:
+                pass
+
+        # Algebraic simplification, e.g. x*1 = x
+        # Reduces 3 nodes - OP, Left and Right to 1 node
+
+        # x + 0
+        if op == "+":
+            if left.type == "NUMBER" and float(left.value) == 0:
+                return right
+            if right.type == "NUMBER" and float(right.value) == 0:
+                return left
+
+        # x - 0
+        if op == "-":
+            if right.type == "NUMBER" and float(right.value) == 0:
+                return left
+
+        if op == "*":
+            # x * 0
+            if (left.type == "NUMBER" and float(left.value) == 0) or (right.type == "NUMBER" and float(right.value) == 0):
+                return ASTNode("NUMBER", "0")
+            
+            # x * 1
+            if left.type == "NUMBER" and float(left.value) == 1:
+                return right
+            if right.type == "NUMBER" and float(right.value) == 1:
+                return left
+
+        if op == "/":
+            # 0 / x
+            if left.type == "NUMBER" and float(left.value) == 0:
+                return ASTNode("NUMBER", "0")
+            
+            # x / 1
+            if right.type == "NUMBER" and float(right.value) == 1:
+                return left
+
+        if op == "**":
+            if right.type == "NUMBER":
+                # x ** 1
+                if float(right.value) == 1:
+                    return left
+                
+                # x ** 0
+                if float(right.value) == 0:
+                    return ASTNode("NUMBER", "1")
+
+        return node
+
+    # Evaluate functions if possible
+    if node.type == "FUNCTION":
+        arg = node.left
+
+        if arg and arg.type == "NUMBER":
+            try:
+                val = float(arg.value)
+                if node.value == "sin":
+                    return ASTNode("NUMBER", str(math.sin(val)))
+                if node.value == "cos":
+                    return ASTNode("NUMBER", str(math.cos(val)))
+                if node.value == "tan":
+                    return ASTNode("NUMBER", str(math.tan(val)))
+            except Exception:
+                pass
+
+        # ln(1) = 0
+        if node.value == "ln" and arg.type == "NUMBER" and float(arg.value) == 1:
+            return ASTNode("NUMBER", "0")
+
+        return node
+
+    return node

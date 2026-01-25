@@ -35,6 +35,10 @@ def differentiate(node):
             return ASTNode("OP", "+", term1, term2)
 
         elif operator == "**":
+            print("BASE:", node.left.type, node.left.value)
+            print("EXP :", node.right.type, node.right.value)
+
+                    
             # Implements the power rule (d/dx[u^n] = n * u^(n-1) * u') to differentiate a base to a numerical exponent
             base = node.left
             exponent = node.right
@@ -58,6 +62,24 @@ def differentiate(node):
                 return ASTNode("OP", "*", value_to_power, ln_base)
             
             else:
+                # General case: u(x)^v(x)
+                base = node.left
+                exponent = node.right
+
+                u_prime = differentiate(base)
+                v_prime = differentiate(exponent)
+
+                ln_u = ASTNode("FUNCTION", "ln", base, None)
+                term1 = ASTNode("OP", "*", v_prime, ln_u)
+
+                u_over_u = ASTNode("OP", "/", u_prime, base)
+                term2 = ASTNode("OP", "*", exponent, u_over_u)
+
+                bracket = ASTNode("OP", "+", term1, term2)
+                power = ASTNode("OP", "**", base, exponent)
+
+                return ASTNode("OP", "*", power, bracket)
+
                 return None
 
     # Differentiates a function using the chain rule (d/dx[f(g)] = f'g')
