@@ -1,0 +1,277 @@
+CLASS ASTNode
+    SUBROUTINE Initialise(node_type, value, left, right)
+    type ← node_type
+    value ← value
+    left ← left
+    right ← right
+    ENDSUBROUTINE
+ENDCLASS
+
+SUBROUTINE Postfix(tokens)
+    // Produces a postfix version of the token list
+    // Initialising variables and dictionaries
+    postfix_queue ← NEW Queue(size = 64)
+    operator_stack ← NEW Stack(size = 64)
+
+    // BIDMAS order of operations
+    precedence["+"] ← 1
+    precedence["-"] ← 1
+    precedence["*"] ← 2
+    precedence["/"] ← 2
+    precedence["**"] ← 3
+
+    associativity["+"] ← "L"
+    associativity["-"] ← "L"
+    associativity["*"] ← "L"
+    associativity["/"] ← "L"
+    associativity["**"] ← "R"
+
+    // Shunting yard algorithm for postfix production
+    FOR index ← 0 TO LENGTH(tokens) − 1
+        token ← tokens[index][0]
+        value ← tokens[index][1]
+
+        // Adds a number or variable straight to the queue
+        IF token = "NUMBER" OR token = "NAME" THEN
+            postfix_queue.ENQUEUE(token, value)
+
+        // Adds function straight to the stack as it has highest precedence
+        ELSE IF token = "FUNCTION" THEN
+            operator_stack.PUSH(token, value)
+
+        // Checking to see if the precedence of the item at the top of the stack is higher or lower than current
+        ELSE IF token = "OP" THEN
+            WHILE operator_stack.NOT_EMPTY() AND
+                operator_stack.TOP().TYPE = "OP" AND
+                (
+                    (associativity[value] = "L" AND precedence[value] ≤ precedence[operator_stack.TOP().VALUE]) OR
+                    (associativity[value] = "R" AND precedence[value] < precedence[operator_stack.TOP().VALUE])
+                )
+                postfix_queue.ENQUEUE(operator_stack.POP())
+            ENDWHILE
+            operator_stack.PUSH(token, value)
+
+        // Add left parenthesis to the stack waiting for the other of the pair
+        ELSE IF token = "LEFTPARENTHESIS" THEN
+            operator_stack.PUSH(token, value)
+
+        // Right parenthesis
+        ELSE IF token = "RIGHTPARENTHESIS" THEN
+            WHILE operator_stack.NOT_EMPTY() AND operator_stack.TOP().TYPE ≠ "LEFTPARENTHESIS"
+                postfix_queue.ENQUEUE(operator_stack.POP())
+            ENDWHILE
+
+            // Remove the left parenthesis
+            IF operator_stack.NOT_EMPTY() AND operator_stack.TOP().TYPE = "LEFTPARENTHESIS" THEN
+                operator_stack.POP()
+            ENDIF
+
+            // If function is on top, pop it to queue
+            IF operator_stack.NOT_EMPTY() AND operator_stack.TOP().TYPE = "FUNCTION" THEN
+                postfix_queue.ENQUEUE(operator_stack.POP())
+            ENDIF
+        ENDIF
+    ENDFOR
+
+    // Lastly pop any remaining operators and add to the queue
+    WHILE operator_stack.NOT_EMPTY()
+        postfix_queue.ENQUEUE(operator_stack.POP())
+    ENDWHILE
+
+    // Converted to postfix
+    RETURN postfix_queue
+ENDSUBROUTINE
+
+SUBROUTINE PostfixToAST(postfix_queue)
+    // Creates an AST from the postfix queue using the ASTNode class
+    node_stack ← NEW Stack(size = 64)
+    WHILE postfix_queue.NOT_EMPTY()
+        token, value ← postfix_queue.DEQUEUE()
+
+        // These will be leaves and so do not have children
+        IF token = "NUMBER" OR token = "NAME" THEN
+            node ← NEW ASTNode(token, value, NULL, NULL)
+            node_stack.PUSH(node)
+
+        // These will only have a left child as the parameter of the function
+        ELSE IF token = "FUNCTION" THEN
+            operand ← node_stack.POP()
+            node ← NEW ASTNode(token, value, operand, NULL)
+            node_stack.PUSH(node)
+
+        // These will use both children as are operators
+        ELSE IF token = "OP" THEN
+            right ← node_stack.POP()
+            left ← node_stack.POP()
+            node ← NEW ASTNode(token, value, left, right)
+            node_stack.PUSH(node)
+        ENDIF
+    ENDWHILE
+
+    // The remaining node is the root of the AST
+    RETURN node_stack.POP()
+ENDSUBROUTINE
+
+SUBROUTINE EvaluateAST(node, variable_value, variable, use_degrees, inside_trig, needs_converting)
+    // Recursively evaluates AST for a given value along the axis
+
+    IF node = NULL THEN
+        RETURN NULL
+    ENDIF
+
+    // Return the number
+    IF node.TYPE = "NUMBER" THEN
+        val ← FLOAT(node.VALUE)
+        // Converts to radians if is degrees and is not mul / div by the variable
+        IF use_degrees AND inside_trig AND needs_converting THEN
+            RETURN RADIANS(val)
+        ENDIF
+        RETURN val
+    ENDIF
+
+    // Return the value of the variable at that point along the axis
+    IF node.TYPE = "NAME" AND node.VALUE = variable THEN
+        RETURN FLOAT(variable_value)
+    ENDIF
+
+    // Operators
+    IF node.TYPE = "OP" THEN
+        // Determine if children needs converting
+        left_convert ← needs_converting
+        right_convert ← needs_converting
+
+        // Don't convert children if they're mul / div the variable
+        IF inside_trig AND (node.VALUE = "*" OR node.VALUE = "/") THEN
+            IF node.LEFT.TYPE = "NUMBER" AND node.RIGHT.TYPE = "NAME" THEN
+                left_convert ← FALSE
+            ELSE IF node.LEFT.TYPE = "NAME" AND node.RIGHT.TYPE = "NUMBER" THEN
+                right_convert ← FALSE
+            ENDIF
+        ENDIF
+
+        left ← EvaluateAST(node.LEFT, variable_value, variable, use_degrees, inside_trig, left_convert)
+        right ← EvaluateAST(node.RIGHT, variable_value, variable, use_degrees, inside_trig, right_convert)
+
+        IF left = NULL OR right = NULL THEN
+            RETURN NULL
+        ENDIF
+
+        // Perform the operators
+        IF node.VALUE = "+" THEN RETURN left + right
+        IF node.VALUE = "-" THEN RETURN left - right
+        IF node.VALUE = "*" THEN RETURN left * right
+        IF node.VALUE = "/" THEN RETURN left / right
+        IF node.VALUE = "**" THEN RETURN left ^ right
+    ENDIF
+
+    // Evaluate the functions
+    IF node.TYPE = "FUNCTION" THEN
+        // When evaluating inside trig, inside_trig = TRUE
+        argument ← EvaluateAST(node.LEFT, variable_value, variable, use_degrees, TRUE, TRUE)
+        IF argument = NULL THEN RETURN NULL
+
+        IF node.VALUE = "sin" THEN RETURN SIN(argument)
+        IF node.VALUE = "cos" THEN RETURN COS(argument)
+        IF node.VALUE = "tan" THEN RETURN TAN(argument)
+        IF node.VALUE = "ln" THEN RETURN LN(argument)
+    ENDIF
+
+    RETURN NULL
+ENDSUBROUTINE
+
+SUBROUTINE CopyAST(node)
+    // Produces a copy of the AST with the supplied root node
+    IF node = NULL THEN
+    RETURN NULL
+    ENDIF
+
+    RETURN NEW ASTNode(node.TYPE, node.VALUE, CopyAST(node.LEFT), CopyAST(node.RIGHT))
+ENDSUBROUTINE
+
+SUBROUTINE ContainsTrigFunction(node)
+    // Returns TRUE if AST contains sin, cos, or tan
+    IF node = NULL THEN
+    RETURN FALSE
+    ENDIF
+
+    IF node.TYPE = "FUNCTION" AND node.VALUE IN {"sin", "cos", "tan"} THEN
+        RETURN TRUE
+    ENDIF
+
+    RETURN ContainsTrigFunction(node.LEFT) OR ContainsTrigFunction(node.RIGHT)
+ENDSUBROUTINE
+
+SUBROUTINE SimplifyAST(node)
+    // Recursively simplifies an AST
+    // Designed to reduce excess nodes created from differentiation logic
+
+    IF node = NULL THEN
+        RETURN NULL
+    ENDIF
+
+    // Simplify children first (post-order traversal)
+    node.LEFT ← SimplifyAST(node.LEFT)
+    node.RIGHT ← SimplifyAST(node.RIGHT)
+
+    // Leaf nodes cannot be simplified
+    IF node.TYPE IN {"NUMBER", "NAME"} THEN
+        RETURN node
+    ENDIF
+
+    // Simplifying logic for operators
+    IF node.TYPE = "OP" THEN
+        op ← node.VALUE
+        left ← node.LEFT
+        right ← node.RIGHT
+
+        // If the operator is calculable, e.g. 5*3 then return a number node of 15
+        // Reduces 3 nodes - OP, Left and Right to 1 node
+        IF left.TYPE = "NUMBER" AND right.TYPE = "NUMBER" THEN
+            RETURN NEW ASTNode("NUMBER", CALCULATE(op, left, right))
+        ENDIF
+
+        // Algebraic simplification, e.g. x*1 = x
+        // Reduces 3 nodes - OP, Left and Right to 1 node
+
+        // x + 0
+        IF op = "+" AND right.VALUE = 0 THEN RETURN left
+        IF op = "+" AND left.VALUE = 0 THEN RETURN right
+
+        // x - 0
+        IF op = "-" AND right.VALUE = 0 THEN RETURN left
+
+        // 0 - x = -x
+        IF op = "-" AND left.VALUE = 0 THEN
+            RETURN NEW ASTNode("OP", "*", NEW ASTNode("NUMBER", "-1"), right)
+        ENDIF
+
+        // x * 0
+        IF op = "*" AND (left.VALUE = 0 OR right.VALUE = 0) THEN
+            RETURN NEW ASTNode("NUMBER", "0")
+        ENDIF
+
+        // x * 1
+        IF op = "*" AND left.VALUE = 1 THEN RETURN right
+        IF op = "*" AND right.VALUE = 1 THEN RETURN left
+
+        // x / 1
+        IF op = "/" AND right.VALUE = 1 THEN RETURN left
+
+        // x ** 1 or x ** 0
+        IF op = "**" AND right.VALUE = 1 THEN RETURN left
+        IF op = "**" AND right.VALUE = 0 THEN RETURN NEW ASTNode("NUMBER", "1")
+
+        RETURN node
+    ENDIF
+
+    RETURN node
+ENDSUBROUTINE
+
+SUBROUTINE PrintAST(node, depth)
+    // Debug subroutine used to output the entire tree
+    IF node = NULL THEN RETURN
+
+    OUTPUT INDENT(depth), node.TYPE, node.VALUE
+    PrintAST(node.LEFT, depth + 1)
+    PrintAST(node.RIGHT, depth + 1)
+ENDSUBROUTINE

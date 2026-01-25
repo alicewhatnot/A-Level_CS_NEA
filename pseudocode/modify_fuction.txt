@@ -1,0 +1,126 @@
+CLASS ModifyFunction
+    SUBROUTINE Initialise(altered_function)
+        // Store the function that will be modified
+        altered_function ← altered_function
+    ENDSUBROUTINE
+
+    SUBROUTINE ModifyFunction()
+        // Base method for all function modifications
+        // Just returns the function unchanged
+        RETURN altered_function
+    ENDSUBROUTINE
+ENDCLASS
+
+CLASS DifferentiateFunction INHERITS ModifyFunction
+    SUBROUTINE ModifyFunction()
+        // Applies differentiation to the function AST
+
+        new_tree ← differentiate(altered_function.getFunction())
+
+        IF new_tree = NONE THEN
+            RETURN NONE
+        ENDIF
+
+        // Simplifies the AST to reduce memory impact with successive derivatives
+        // Simplifies until no changes are made
+        simplified ← new_tree
+
+        WHILE TRUE
+            next_simplified ← simplifyAST(simplified)
+
+            IF next_simplified IS simplified THEN
+                BREAK
+            ENDIF
+
+            simplified ← next_simplified
+        ENDWHILE
+
+        printAST(simplified)
+
+        altered_function.setFunction(simplified)
+
+        RETURN altered_function
+    ENDSUBROUTINE
+ENDCLASS
+
+CLASS ShiftFunction INHERITS ModifyFunction
+    SUBROUTINE Initialise(altered_function, axis, value)
+        // Store the function to be modified
+        altered_function ← altered_function
+
+        // Store axis and shift value
+        axis ← axis
+        value ← value
+    ENDSUBROUTINE
+    
+    SUBROUTINE ModifyFunction()
+        // Applies a shift to the function AST
+
+        tree ← altered_function.getFunction()
+
+        IF axis = "x" THEN
+            tree ← shiftX(tree, value)
+        ELSE IF axis = "y" THEN
+            tree ← shiftY(tree, value)
+        ENDIF
+
+        altered_function.setFunction(tree)
+
+        RETURN altered_function
+    ENDSUBROUTINE
+ENDCLASS
+
+CLASS StretchFunction INHERITS ModifyFunction
+    SUBROUTINE Initialise(altered_function, axis, value)
+        // Store the function to be modified
+        altered_function ← altered_function
+
+        // Store axis and stretch value
+        axis ← axis
+        value ← value
+    ENDSUBROUTINE
+
+    SUBROUTINE ModifyFunction()
+        // Applies a stretch to the function AST
+
+        tree ← altered_function.getFunction()
+
+        IF axis = "x" THEN
+            tree ← stretchX(tree, value)
+        ELSE IF axis = "y" THEN
+            tree ← stretchY(tree, value)
+        ENDIF
+
+        altered_function.setFunction(tree)
+
+        RETURN altered_function
+    ENDSUBROUTINE
+ENDCLASS
+
+CLASS ReflectFunction INHERITS ModifyFunction
+    SUBROUTINE Initialise(altered_function, axis)
+        // Store the function to be modified
+        altered_function ← altered_function
+
+        // Store the axis of reflection
+        axis ← axis
+    ENDSUBROUTINE
+
+    SUBROUTINE ModifyFunction()
+        // Applies a reflection to the function AST
+
+        tree ← altered_function.getFunction()
+
+        IF axis = "x" THEN
+            tree ← reflectXAxis(tree)
+        ELSE IF axis = "y" THEN
+            tree ← reflectYAxis(tree)
+        ENDIF
+
+        altered_function.setFunction(tree)
+
+        RETURN altered_function
+    ENDSUBROUTINE
+ENDCLASS
+
+

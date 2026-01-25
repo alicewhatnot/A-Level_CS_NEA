@@ -1,4 +1,5 @@
 SUBROUTINE differentiate(node)
+    // Recursively differentiates a node and its relevant children
     IF node = NULL THEN
         RETURN NULL
 
@@ -45,8 +46,8 @@ SUBROUTINE differentiate(node)
                 RETURN NEW ASTNode("OP", "*", product, base_differentiated)
             
             ELSE IF exponent.type = "NAME" AND base.type = "NUMBER" THEN
-                # Implements the rule d/dx[a^x] = a^x * ln(a) to differentiate a numerical base to a variable exponent
-                # Logarithms are not implemented in the parser as they are out of the scope of the project however implementation for this rule alone is simple as it is not user facing
+                // Implements the rule d/dx[a^x] = a^x * ln(a) to differentiate a numerical base to a variable exponent
+                // Logarithms are not implemented in the parser as they are out of the scope of the project however implementation for this rule alone is simple as it is not user facing
                 
                 ln_base ← NEW ASTNode("FUNCTION", "ln", NEW ASTNode("NUMBER", base.value, NULL, NULL), NULL)
                 value_to_power ← NEW ASTNode("OP", "**", NEW ASTNode("NUMBER", base.value, NULL, NULL), exponent)

@@ -1,0 +1,30 @@
+CLASS Transformation
+    // Transformation object created at runtime
+    // Stores all information required to apply a transformation
+
+    SUBROUTINE Initialise(transform_type, transform_value, transform_axis)
+        // Type of transformation: "shift", "stretch", "reflect", "differentiate", etc.
+        type ← transform_type
+
+        // Numeric value used for shift or stretch
+        value ← transform_value
+
+        // Axis the transformation applies to ("x" or "y")
+        axis ← transform_axis
+    ENDSUBROUTINE
+
+    SUBROUTINE getVal()
+        // Returns the transformation value
+        RETURN value
+    ENDSUBROUTINE
+
+    SUBROUTINE getType()
+        // Returns the transformation type
+        RETURN type
+    ENDSUBROUTINE
+
+    SUBROUTINE getAxis()
+        // Returns the transformation axis
+        RETURN axis
+    ENDSUBROUTINE
+ENDCLASS

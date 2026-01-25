@@ -1,0 +1,195 @@
+    SUBROUTINE DrawLine(screen, colour, points, thickness)
+    // Draw a thick anti-aliased line
+    // Required as pygame has either line thickness or anti-aliasing but not both
+
+    // Needs at least two points to draw a line
+    IF LENGTH(points) < 2 THEN
+        RETURN
+    ENDIF
+
+    // Prepare offsets for a thick line
+    offsets ← EMPTY LIST
+    half ← thickness DIV 2
+
+    FOR dx ← -half TO half
+        FOR dy ← -half TO half
+            APPEND (dx, dy) TO offsets
+        ENDFOR
+    ENDFOR
+
+    // Draw line segments for each offset
+    FOR EACH (dx, dy) IN offsets
+        offset_points ← EMPTY LIST
+
+        FOR EACH (x, y) IN points
+            APPEND (x + dx, y + dy) TO offset_points
+        ENDFOR
+
+        // Draw the segment with anti-aliasing
+        FOR i ← 1 TO LENGTH(offset_points) - 1
+            DRAW_AALINE(screen, colour, offset_points[i - 1], offset_points[i])
+        ENDFOR
+    ENDFOR
+ENDSUBROUTINE
+
+CLASS GraphPlotter
+    SUBROUTINE Initialise()
+        functions ← EMPTY LIST
+        dual_view ← FALSE
+    ENDSUBROUTINE
+
+    SUBROUTINE GetBaseFunction()
+        // Returns the first function added which is the base function
+        RETURN functions[0]
+    ENDSUBROUTINE
+
+    SUBROUTINE PlotFunction(function_object)
+        // Clears old graph and plots only the new user function
+        functions ← [function_object]
+    ENDSUBROUTINE
+
+    SUBROUTINE PlotSubsequent(function_object)
+        // Adds a new transformed function without clearing any previous
+        APPEND function_object TO functions
+    ENDSUBROUTINE
+
+    SUBROUTINE DrawAll(screen, dual_view, top_function, bottom_function, use_degrees)
+        // Draws either a single graph or a dual-view graph
+
+        IF dual_view = FALSE THEN
+            // Normal mode draw functions on a single graph
+            FOR EACH function IN functions
+                DrawFunction(screen, function)
+            ENDFOR
+
+        ELSE
+            graph_height ← HEIGHT DIV 2
+            // Each graph is half height
+
+            // Top draws top function
+            IF top_function <> NULL THEN
+                DrawFunction(
+                    screen,
+                    top_function,
+                    y_offset = 0,
+                    graph_height = graph_height,
+                    use_degrees = use_degrees
+                )
+            ENDIF
+
+            // Bottom draws bottom function
+            IF bottom_function <> NULL THEN
+                DrawFunction(
+                    screen,
+                    bottom_function,
+                    y_offset = graph_height,
+                    graph_height = graph_height,
+                    use_degrees = use_degrees
+                )
+            ENDIF
+        ENDIF
+    ENDSUBROUTINE
+
+    SUBROUTINE DrawFunction(screen, function_object, colour_override, y_offset, graph_height, use_degrees)
+        // Draws a given function
+        // Takes colour override, y offset and graph height if required
+
+        TRY
+            // If not altered default to full height
+            IF graph_height IS NULL THEN
+                graph_height ← HEIGHT
+            ENDIF
+
+            // Get the tree, variable and colour from the function argument
+            function_tree ← function_object.GetFunction()
+            IF function_tree IS NULL THEN
+                RETURN
+            ENDIF
+
+            variable ← function_object.GetFunctionVar()
+
+            // Override to gray if needed
+            IF colour_override IS NOT NULL THEN
+                colour ← colour_override
+            ELSE
+                colour ← function_object.GetColour()
+            ENDIF
+
+            // Define graph drawing area and scale
+            graph_left ← SIDEBAR_WIDTH
+            graph_width ← WIDTH - SIDEBAR_WIDTH
+            center_x ← graph_left + graph_width DIV 2
+            center_y ← y_offset + graph_height DIV 2
+            scale ← GRAPH_SCALE
+
+            prev_py ← NULL
+            segment ← EMPTY LIST
+
+            min_y ← y_offset
+            // Removed 5 from the graph height to ensure the plotted function does not go over the dual graph boundaries
+            max_y ← y_offset + graph_height - 5
+
+            // Iterate over pixels along the graph’s length
+            FOR px ← graph_left TO WIDTH - 1
+                // For each x value
+                x_val ← (px - center_x) / scale
+
+                // The y value is the function evaluated at that x value
+                y_val ← EvaluateAST(function_tree, x_val, variable, use_degrees)
+
+                // Handles discontinuous functions
+                IF y_val IS NULL OR IS_NAN(y_val) OR IS_INF(y_val) THEN
+                    // Draws the current segment and resets
+                    IF LENGTH(segment) > 1 THEN
+                        DrawLine(screen, colour, segment, LINE_THICKNESS)
+                    ENDIF
+                    segment ← EMPTY LIST
+                    prev_py ← NULL
+                    CONTINUE
+                ENDIF
+
+                // Map y values to screen pixels
+                py ← center_y - INTEGER(y_val * scale)
+
+                // If in bounds or just one graph just draw the line
+                IF (min_y ≤ py ≤ max_y) OR graph_height > 500 THEN
+                    IF prev_py IS NOT NULL AND ABS(py - prev_py) > graph_height / 2 THEN
+                        IF LENGTH(segment) > 1 THEN
+                            DrawLine(screen, colour, segment, LINE_THICKNESS)
+                        ENDIF
+                        segment ← EMPTY LIST
+                    ENDIF
+
+                    APPEND (px, py) TO segment
+                    prev_py ← py
+
+                // If out of bounds needs to clip to boundary (for asymptotes)
+                ELSE
+                    IF py < min_y THEN
+                        clipped_py ← min_y
+                    ELSE IF py > max_y - 10 THEN
+                        clipped_py ← max_y
+                    ENDIF
+
+                    IF LENGTH(segment) > 0 THEN
+                        // Extend to the boundary
+                        APPEND (px, clipped_py) TO segment
+                        DrawLine(screen, colour, segment, LINE_THICKNESS)
+                    ENDIF
+
+                    // Reset segment for the next branch
+                    segment ← EMPTY LIST
+                    prev_py ← NULL
+                ENDIF
+            ENDFOR
+
+            // Ensure there are no segments left undrawn
+            IF LENGTH(segment) > 1 THEN
+                DrawLine(screen, colour, segment, LINE_THICKNESS)
+            ENDIF
+
+        CATCH
+            // An error occurred in graphing
+        ENDTRY
+    ENDSUBROUTINE
+ENDCLASS

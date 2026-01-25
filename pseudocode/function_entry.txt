@@ -1,0 +1,41 @@
+CLASS FunctionEntry
+    SUBROUTINE Initialise(user_input)
+        user_input ← user_input
+        tokens ← EMPTY LIST
+        variable ← EMPTY STRING
+        ast ← NULL
+    ENDSUBROUTINE
+
+    SUBROUTINE ParseFunction()
+        // Tokenise the user input string
+        tokens, variable ← PARSE(user_input)
+
+        IF tokens IS EMPTY THEN
+            RETURN FALSE
+        ENDIF
+
+        RETURN TRUE
+    ENDSUBROUTINE
+
+    SUBROUTINE FunctionAST()
+        // Convert tokens to postfix then build the AST
+        IF tokens IS EMPTY THEN
+            // ValueError: Token list is empty
+            RETURN
+        ENDIF
+
+        tokens ← POSTFIX(tokens)
+        ast ← POSTFIX_TO_AST(tokens)
+    ENDSUBROUTINE
+
+    SUBROUTINE OutputFunction()
+        // Return the AST
+        IF ast = NULL THEN
+            // ValueError: No AST found
+            RETURN NULL
+        ELSE
+            OUTPUT "Function Variable:", variable
+            RETURN ast, variable
+        ENDIF
+    ENDSUBROUTINE
+ENDCLASS

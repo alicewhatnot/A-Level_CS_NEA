@@ -1,0 +1,65 @@
+CLASS Queue
+    SUBROUTINE Initialise(max_size)
+        // Create fixed-size array for queue items
+        items ← array of size max_size filled with NONE
+
+        // Index of the front of the queue
+        front ← 0
+
+        // Index of the rear of the queue
+        rear ← -1
+
+        // Current number of items in the queue
+        size ← 0
+
+        // Maximum size of the queue
+        max_size ← max_size
+    ENDSUBROUTINE
+
+    SUBROUTINE enqueue(value)
+        // Adds an item to the rear of the queue
+
+        IF isFull() THEN
+            OUTPUT "Queue Overflow"
+            RETURN
+        ENDIF
+
+        rear ← (rear + 1) MOD max_size
+        items[rear] ← value
+        size ← size + 1
+    ENDSUBROUTINE
+
+    SUBROUTINE dequeue()
+        // Removes and returns the item at the front of the queue
+
+        IF isEmpty() THEN
+            RETURN NONE
+        ENDIF
+
+        item ← items[front]
+        items[front] ← NONE
+
+        front ← (front + 1) MOD max_size
+        size ← size - 1
+
+        RETURN item
+    ENDSUBROUTINE
+
+    SUBROUTINE isEmpty()
+        // Returns TRUE if the queue is empty
+        RETURN size = 0
+    ENDSUBROUTINE
+
+    SUBROUTINE isFull()
+        // Returns TRUE if the queue is full
+        RETURN size = max_size
+    ENDSUBROUTINE
+
+    SUBROUTINE clear()
+        // Removes all items from the queue
+
+        WHILE isEmpty() = FALSE
+            dequeue()
+        ENDWHILE
+    ENDSUBROUTINE
+ENDCLASS

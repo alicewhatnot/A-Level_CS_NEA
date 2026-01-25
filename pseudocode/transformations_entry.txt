@@ -1,0 +1,61 @@
+SUBROUTINE validTransformation(value, type)
+    // Performs validation on user input depending on transformation type
+    // Uses tokenizer logic from the main parser
+
+    contains_name ← FALSE
+
+    // Only parse value if transformation is not reflect
+    IF type ≠ "reflect" THEN
+        tokens ← tokenize(value)
+
+        // If tokenisation fails, transformation is invalid
+        IF tokens = NULL THEN
+            RETURN FALSE
+        ENDIF
+
+        // Reject if variable name is present
+        FOR EACH token IN tokens DO
+            IF token[0] = "NAME" THEN
+                contains_name ← TRUE
+                RETURN FALSE
+            ENDIF
+        ENDFOR
+    ENDIF
+
+    // Reject empty input
+    IF value = "" THEN
+        RETURN FALSE
+    ENDIF
+
+    // Check default or invalid values
+    TRY
+        IF contains_name = FALSE THEN
+
+            // Shift by 0 has no effect
+            IF type = "shift" AND value EVALUATES TO 0 THEN
+                RETURN FALSE
+            ENDIF
+
+            // Stretch by 1 has no effect
+            IF type = "stretch" AND value EVALUATES TO 1 THEN
+                RETURN FALSE
+            ENDIF
+
+            // Reflect unchecked
+            IF type = "reflect" AND value = FALSE THEN
+                RETURN FALSE
+            ENDIF
+
+            // Stretch by 0 is invalid
+            IF type = "stretch" AND value EVALUATES TO 0 THEN
+                RETURN FALSE
+            ENDIF
+
+            RETURN TRUE
+        ENDIF
+    CATCH ERROR
+        RETURN FALSE
+    ENDTRY
+
+    RETURN FALSE
+ENDSUBROUTINE

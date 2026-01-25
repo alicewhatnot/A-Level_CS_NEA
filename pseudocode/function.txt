@@ -1,0 +1,37 @@
+CLASS Function
+    SUBROUTINE Initialise(function_tree, function_variable, function_colour)
+        // Store the AST representing the function
+        function_tree ← function_tree
+
+        // Store the variable used in the function
+        function_variable ← function_variable
+
+        // Store the colour used to draw the function
+        function_colour ← function_colour
+    ENDSUBROUTINE
+
+    SUBROUTINE GetFunction()
+        // Return the function AST
+        RETURN function_tree
+    ENDSUBROUTINE
+
+    SUBROUTINE SetFunction(new_function_tree)
+        // Update the function AST
+        function_tree ← new_function_tree
+    ENDSUBROUTINE
+
+    SUBROUTINE GetColour()
+        // Return the function colour
+        RETURN function_colour
+    ENDSUBROUTINE
+
+    SUBROUTINE SetColour(new_colour)
+        // Update the function colour
+        function_colour ← new_colour
+    ENDSUBROUTINE
+
+    SUBROUTINE GetFunctionVar()
+        // Return the function variable
+        RETURN function_variable
+    ENDSUBROUTINE
+ENDCLASS

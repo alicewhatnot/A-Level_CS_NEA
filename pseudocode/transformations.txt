@@ -1,0 +1,108 @@
+SUBROUTINE reflectXAxis(node)
+    // Reflects the function across the X-axis
+    // Done by multiplying the entire expression by -1
+
+    IF node = NULL THEN
+        RETURN NULL
+    ENDIF
+
+    negative_one ← NEW ASTNode("NUMBER", "-1", NULL, NULL)
+    RETURN NEW ASTNode("OP", "*", negative_one, node)
+ENDSUBROUTINE
+
+SUBROUTINE reflectYAxis(node)
+    // Reflects the function across the Y-axis
+    // Done by multiplying every variable by -1
+
+    IF node = NULL THEN
+        RETURN NULL
+
+    ELSE IF node.type = "NAME" THEN
+        negative_one ← NEW ASTNode("NUMBER", "-1", NULL, NULL)
+        RETURN NEW ASTNode("OP", "*", negative_one, node)
+
+    ELSE
+        // Recursively apply reflection to subtrees
+        IF node.left <> NULL THEN
+            node.left ← reflectYAxis(node.left)
+        ENDIF
+
+        IF node.right <> NULL THEN
+            node.right ← reflectYAxis(node.right)
+        ENDIF
+
+        RETURN node
+    ENDIF
+ENDSUBROUTINE
+
+SUBROUTINE shiftX(node, shift)
+    // Shifts the function along the X-axis
+    // Implemented by replacing x with (x - shift)
+
+    IF node = NULL THEN
+        RETURN NULL
+
+    ELSE IF node.type = "NAME" THEN
+        shift_amount ← NEW ASTNode("NUMBER", shift AS STRING, NULL, NULL)
+        RETURN NEW ASTNode("OP", "-", node, shift_amount)
+
+    ELSE
+        IF node.left <> NULL THEN
+            node.left ← shiftX(node.left, shift)
+        ENDIF
+
+        IF node.right <> NULL THEN
+            node.right ← shiftX(node.right, shift)
+        ENDIF
+
+        RETURN node
+    ENDIF
+ENDSUBROUTINE
+
+SUBROUTINE shiftY(node, shift)
+    // Shifts the function along the Y-axis
+    // Implemented by adding the shift value to the whole expression
+
+    IF node = NULL THEN
+        RETURN NULL
+    ENDIF
+
+    shift_amount ← NEW ASTNode("NUMBER", shift AS STRING, NULL, NULL)
+    RETURN NEW ASTNode("OP", "+", node, shift_amount)
+ENDSUBROUTINE
+
+SUBROUTINE stretchX(node, stretch)
+    // Stretches the function along the X-axis
+    // Implemented by dividing the variable by the stretch factor
+
+    IF node = NULL THEN
+        RETURN NULL
+
+    ELSE IF node.type = "NAME" THEN
+        factor ← NEW ASTNode("NUMBER", stretch AS STRING, NULL, NULL)
+        RETURN NEW ASTNode("OP", "/", node, factor)
+
+    ELSE
+        IF node.left <> NULL THEN
+            node.left ← stretchX(node.left, stretch)
+        ENDIF
+
+        IF node.right <> NULL THEN
+            node.right ← stretchX(node.right, stretch)
+        ENDIF
+
+        RETURN node
+    ENDIF
+ENDSUBROUTINE
+
+SUBROUTINE stretchY(node, stretch)
+    // Stretches the function along the Y-axis
+    // Implemented by multiplying the entire expression by the stretch factor
+
+    IF node = NULL THEN
+        RETURN NULL
+    ENDIF
+
+    factor ← NEW ASTNode("NUMBER", stretch AS STRING, NULL, NULL)
+    RETURN NEW ASTNode("OP", "*", factor, node)
+ENDSUBROUTINE

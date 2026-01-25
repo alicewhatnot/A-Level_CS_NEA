@@ -1,0 +1,220 @@
+SUBROUTINE tokenize(expression)
+    // Returns a two dimensional array of all characters in the expression and their associated token
+
+    // Initialise variables and clean the expression
+    tokens ← empty list
+    index ← 0
+    valid_characters ← TRUE
+    expression ← expression with spaces removed
+    expression ← expression with "^" replaced by "**"
+
+    // Regex patterns to look for in the expression
+    patterns ←
+        NUMBER : number regex
+        FUNCTION : sin | cos | tan
+        NAME : letter
+        OP : ** or + - * /
+        LEFTPARENTHESIS : (
+        RIGHTPARENTHESIS : )
+
+    // Checking every character in the expression while there are still no invalid found
+    WHILE index < length(expression) AND valid_characters = TRUE
+        matched ← FALSE
+
+        FOR EACH token, pattern IN patterns
+            // If a match is found then the relevant number of characters are added to tokens[]
+            match ← pattern matches expression at index
+
+            IF match exists THEN
+                characters ← matched characters
+
+                // Special handling for single minus number
+                IF token = "OP" AND characters = "-" THEN
+                    // Single number if at start or after another operator or after '('
+                    IF tokens is empty OR last token type is OP OR LEFTPARENTHESIS THEN
+                        // Look ahead for a number
+                        num_match ← NUMBER pattern matches expression at index + 1
+
+                        IF num_match exists THEN
+                            num_str ← matched number
+
+                            // Insert tokens for (0 - num)
+                            append ("LEFTPARENTHESIS", "(") to tokens
+                            append ("NUMBER", "0") to tokens
+                            append ("OP", "-") to tokens
+                            append ("NUMBER", num_str) to tokens
+                            append ("RIGHTPARENTHESIS", ")") to tokens
+
+                            // Skip past "-" and number now
+                            index ← index + 1 + length(num_str)
+                            matched ← TRUE
+                            BREAK
+                        ENDIF
+                    ENDIF
+                ENDIF
+
+                // Normal case
+                append (token, characters) to tokens
+                index ← index + length(characters)
+                matched ← TRUE
+                BREAK
+            ENDIF
+        ENDFOR
+
+        IF matched = FALSE THEN
+            valid_characters ← FALSE
+        ENDIF
+    ENDWHILE
+
+    // Only returns token list if all characters are valid
+    IF valid_characters = TRUE THEN
+        RETURN tokens
+    ELSE
+        RETURN NONE
+    ENDIF
+ENDSUBROUTINE
+
+SUBROUTINE insertImplicitMultiplication(tokens)
+    // Adds multiplication where the user would consider it to be implicit
+
+    new_tokens ← empty list
+    length ← number of tokens
+
+    FOR index FROM 0 TO length - 2
+        current_token ← tokens[index].type
+        current_value ← tokens[index].value
+        next_token ← tokens[index + 1].type
+        next_value ← tokens[index + 1].value
+
+        append (current_token, current_value) to new_tokens
+
+        // Insert '*' if implicit multiplication detected
+        IF current_token IN {NUMBER, NAME, RIGHTPARENTHESIS} AND
+           next_token IN {NAME, FUNCTION, LEFTPARENTHESIS, NUMBER} THEN
+            append ("OP", "*") to new_tokens
+        ENDIF
+    ENDFOR
+
+    // Add last token
+    append last token to new_tokens
+
+    RETURN new_tokens
+ENDSUBROUTINE
+
+
+SUBROUTINE validateTokens(tokens)
+    // Checks if the order of the tokens array is valid
+
+    parenthesis_balance ← 0
+    variable_found ← FALSE
+    variable ← NONE
+
+    FOR index FROM 0 TO length(tokens) - 1
+        token ← tokens[index].type
+        value ← tokens[index].value
+
+        // Only sets prev_token if one exists
+        IF index > 0 THEN
+            prev_token ← tokens[index - 1].type
+        ELSE
+            prev_token ← NONE
+        ENDIF
+
+        // Only sets next_token if one exists
+        IF index < length(tokens) - 1 THEN
+            next_token ← tokens[index + 1].type
+        ELSE
+            next_token ← NONE
+        ENDIF
+
+        // Checking for parenthesis balance
+        IF token = "LEFTPARENTHESIS" THEN
+            parenthesis_balance ← parenthesis_balance + 1
+        ELSE IF token = "RIGHTPARENTHESIS" THEN
+            parenthesis_balance ← parenthesis_balance - 1
+            IF parenthesis_balance < 0 THEN
+                RETURN FALSE, variable
+            ENDIF
+        ENDIF
+
+        // Checking for double operators, only allows if the second is a negative
+        IF prev_token = "OP" AND token = "OP" AND value ≠ "-" THEN
+            RETURN FALSE, variable
+        ENDIF
+
+        // Checking if a trigonometric function is followed by a parenthesis
+        IF token = "FUNCTION" AND next_token ≠ "LEFTPARENTHESIS" THEN
+            RETURN FALSE, variable
+        ENDIF
+
+        // Checks to see if there is more than one variable attempting to be created
+        IF token = "NAME" THEN
+            IF variable_found = FALSE THEN
+                variable ← value
+                variable_found ← TRUE
+            ELSE IF value ≠ variable THEN
+                RETURN FALSE, variable
+            ENDIF
+        ENDIF
+
+        // ** must have a valid base
+        IF token = "OP" AND value = "**" THEN
+            IF prev_token NOT IN {NUMBER, NAME, RIGHTPARENTHESIS} THEN
+                RETURN FALSE, variable
+            ENDIF
+            IF next_token NOT IN {NUMBER, NAME, LEFTPARENTHESIS} THEN
+                RETURN FALSE, variable
+            ENDIF
+
+            // NAME ** NAME
+            prev_value ← tokens[index - 1].value
+            next_value ← tokens[index + 1].value
+
+            IF prev_token = "NAME" AND next_token = "NAME" AND prev_value = next_value THEN
+                RETURN FALSE, variable
+            ENDIF
+        ENDIF
+
+        // Checking for ()
+        IF token = "LEFTPARENTHESIS" AND next_token = "RIGHTPARENTHESIS" THEN
+            RETURN FALSE, variable
+        ENDIF
+    ENDFOR
+
+    // Final check if the last token is an operator or if the parenthesis balance is incorrect
+    IF last token type = "OP" OR parenthesis_balance ≠ 0 THEN
+        RETURN FALSE, variable
+    ENDIF
+
+    RETURN TRUE, variable
+ENDSUBROUTINE
+
+SUBROUTINE parse(expression)
+    // Brings together the three subroutines involved in parsing the expression
+
+    tokens ← tokenize(expression)
+    OUTPUT "Expression Tokenized"
+
+    IF tokens = NONE THEN
+        OUTPUT "Invalid Tokens"
+        RETURN empty list, NONE
+    ENDIF
+
+    tokens ← insertImplicitMultiplication(tokens)
+    OUTPUT "Multiplication Inserted"
+
+    valid, variable ← validateTokens(tokens)
+
+    IF valid = FALSE THEN
+        OUTPUT "Invalid Tokens"
+        RETURN empty list, NONE
+    ENDIF
+
+    OUTPUT "Returning Valid Tokens"
+
+    FOR EACH token IN tokens
+        OUTPUT token
+    ENDFOR
+
+    RETURN tokens, variable
+ENDSUBROUTINE
