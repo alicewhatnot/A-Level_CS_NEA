@@ -2,7 +2,7 @@ from core.ast import ASTNode
 
 def differentiate(node):
     """
-    Recursivly differentiates a node and its relevant children
+    Recursively differentiates a node and its relevant children
     """
     if node is None:
         return None
@@ -35,9 +35,6 @@ def differentiate(node):
             return ASTNode("OP", "+", term1, term2)
 
         elif operator == "**":
-            print("BASE:", node.left.type, node.left.value)
-            print("EXP :", node.right.type, node.right.value)
-
                     
             # Implements the power rule (d/dx[u^n] = n * u^(n-1) * u') to differentiate a base to a numerical exponent
             base = node.left
@@ -63,6 +60,22 @@ def differentiate(node):
             
             else:
                 return None
+        
+        # Implements the rule d/dx[u/v] = (vdu - udv) / v^2 to differentiate a numerical base to a variable exponent
+        elif operator == "/":
+            top = node.left
+            bottom = node.right
+            dtop = differentiate(top)
+            dbottom = differentiate(bottom)
+
+            numerator = ASTNode(
+                "OP", "-",
+                ASTNode("OP", "*", bottom, dtop),
+                ASTNode("OP", "*", top, dbottom)
+            )
+            denominator = ASTNode("OP", "**", bottom, ASTNode("NUMBER", "2", None, None))
+            return ASTNode("OP", "/", numerator, denominator)
+        
 
     # Differentiates a function using the chain rule (d/dx[f(g)] = f'g')
     elif node.type == "FUNCTION":

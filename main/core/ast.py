@@ -111,7 +111,6 @@ def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=F
     """
     if node is None:
         return None
-
     # Return the number 
     if node.type == "NUMBER":
         val = float(node.value)
@@ -247,10 +246,15 @@ def simplifyAST(node):
             if right.type == "NUMBER" and float(right.value) == 0:
                 return left
 
-        # x - 0
         if op == "-":
+            # x - 0
             if right.type == "NUMBER" and float(right.value) == 0:
                 return left
+            
+            # 0 - x = -x
+            if left.type == "NUMBER" and float(left.value) == 0:
+                return ASTNode("OP", "*", ASTNode("NUMBER", "-1"), right)
+
 
         if op == "*":
             # x * 0
@@ -262,6 +266,11 @@ def simplifyAST(node):
                 return right
             if right.type == "NUMBER" and float(right.value) == 1:
                 return left
+            
+            # x * -1 = -x
+            if right.type == "NUMBER" and float(right.value) == -1:
+                return ASTNode("OP", "*", ASTNode("NUMBER", "-1"), left)
+
 
         if op == "/":
             # 0 / x
@@ -305,5 +314,36 @@ def simplifyAST(node):
             return ASTNode("NUMBER", "0")
 
         return node
+    
+    # Rewriting quotient rule as power rule - less resource intensive
+    if op == "/" and left.type == "NUMBER" and float(left.value) == 1:
+        if right.type == "OP" and right.value == "**":
+            base = right.left
+            exp = right.right
+            if exp.type == "NUMBER":
+                return ASTNode("OP", "**", base, ASTNode("NUMBER", str(-float(exp.value))))
+    
+    # Rewriting the two power rules
+    # u^a * u^b = u^(a+b)
+    if op == "*" and left.type == "OP" and right.type == "OP":
+        if left.value == "**" and right.value == "**":
+            if left.left == right.left:
+                if left.right.type == "NUMBER" and right.right.type == "NUMBER":
+                    new_exp = float(left.right.value) + float(right.right.value)
+                    return ASTNode("OP", "**", left.left, ASTNode("NUMBER", str(new_exp)))
+    
+    # (u^a)^b = u^(a*b)
+    if op == "**" and left.type == "OP" and left.value == "**":
+        if left.right.type == "NUMBER" and right.type == "NUMBER":
+            new_exp = float(left.right.value) * float(right.value)
+            return ASTNode("OP", "**", left.left, ASTNode("NUMBER", str(new_exp)))
 
     return node
+
+# Debug subroutine used to output the entire tree
+def printAST(node, depth=0):
+    if node is None:
+        return
+    print("  " * depth + f"{node.type}: {node.value}")
+    printAST(node.left, depth + 1)
+    printAST(node.right, depth + 1)
