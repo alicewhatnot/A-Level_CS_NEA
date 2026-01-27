@@ -1,126 +1,128 @@
-CLASS ModifyFunction
-    SUBROUTINE Initialise(altered_function)
+CLASS  MODIFY_FUNCTION
+    ATTRIBUTES
+        PRIVATE altered_function : FUNCTION OBJECT
+    ENDATTRIBUTES
+
+    CONSTSRUCTOR (altered_function)
         // Store the function that will be modified
         altered_function ← altered_function
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE ModifyFunction()
+    PUBLIC METHOD  MODIFY_FUNCTION()
         // Base method for all function modifications
         // Just returns the function unchanged
         RETURN altered_function
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS
 
-CLASS DifferentiateFunction INHERITS ModifyFunction
-    SUBROUTINE ModifyFunction()
+CLASS DifferentiateFunction INHERITS  MODIFY_FUNCTION
+    PUBLIC METHOD  MODIFY_FUNCTION()
         // Applies differentiation to the function AST
 
-        new_tree ← differentiate(altered_function.getFunction())
+        new_tree ← DIFFERENTIATE(altered_function.GET_FUNCTION())
 
         IF new_tree = NONE THEN
             RETURN NONE
         ENDIF
 
-        // Simplifies the AST to reduce memory impact with successive derivatives
-        // Simplifies until no changes are made
-        simplified ← new_tree
+        // Simplifies the AST 
+        simplified ← SIMPLIFY_AST(new_tree)
 
-        WHILE TRUE
-            next_simplified ← simplifyAST(simplified)
-
-            IF next_simplified IS simplified THEN
-                BREAK
-            ENDIF
-
-            simplified ← next_simplified
-        ENDWHILE
-
-        printAST(simplified)
-
-        altered_function.setFunction(simplified)
+        altered_function.SET_FUNCTION(simplified)
 
         RETURN altered_function
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS
 
-CLASS ShiftFunction INHERITS ModifyFunction
-    SUBROUTINE Initialise(altered_function, axis, value)
+CLASS ShiftFunction INHERITS  MODIFY_FUNCTION
+    ATTRIBUTES
+        PRIVATE altered_function : FUNCTION OBJECT
+        PRIVATE axis : STRING
+        PRIVATE value : FLOAT
+    ENDATTRIBUTES
+    
+    CONSTRUCTOR (altered_function, axis, value)
         // Store the function to be modified
         altered_function ← altered_function
 
         // Store axis and shift value
         axis ← axis
         value ← value
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
     
-    SUBROUTINE ModifyFunction()
+    PUBLIC METHOD  MODIFY_FUNCTION()
         // Applies a shift to the function AST
 
-        tree ← altered_function.getFunction()
+        tree ← altered_function.GET_FUNCTION()
 
         IF axis = "x" THEN
-            tree ← shiftX(tree, value)
+            tree ← SHIFT_X(tree, value)
         ELSE IF axis = "y" THEN
-            tree ← shiftY(tree, value)
+            tree ← SHIFT_Y(tree, value)
         ENDIF
 
-        altered_function.setFunction(tree)
+        altered_function.SET_FUNCTION(tree)
 
         RETURN altered_function
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS
 
-CLASS StretchFunction INHERITS ModifyFunction
-    SUBROUTINE Initialise(altered_function, axis, value)
+CLASS StretchFunction INHERITS  MODIFY_FUNCTION
+    ATTRIBUTES
+        PRIVATE axis : STRING
+        PRIVATE value : FLOAT
+    ENDATTRIBUTES
+
+    CONSTRUCTOR (altered_function, axis, value)
         // Store the function to be modified
         altered_function ← altered_function
 
         // Store axis and stretch value
         axis ← axis
         value ← value
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE ModifyFunction()
+    PUBLIC METHOD  MODIFY_FUNCTION()
         // Applies a stretch to the function AST
 
-        tree ← altered_function.getFunction()
+        tree ← altered_function.GET_FUNCTION()
 
         IF axis = "x" THEN
-            tree ← stretchX(tree, value)
+            tree ← STRETCH_X(tree, value)
         ELSE IF axis = "y" THEN
-            tree ← stretchY(tree, value)
+            tree ← STRETCH_Y(tree, value)
         ENDIF
 
-        altered_function.setFunction(tree)
+        altered_function.SET_FUNCTION(tree)
 
         RETURN altered_function
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS
 
-CLASS ReflectFunction INHERITS ModifyFunction
-    SUBROUTINE Initialise(altered_function, axis)
+CLASS ReflectFunction INHERITS  MODIFY_FUNCTION
+    CONSTRUCTOR (altered_function, axis)
         // Store the function to be modified
         altered_function ← altered_function
 
         // Store the axis of reflection
         axis ← axis
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE ModifyFunction()
+    PUBLIC METHOD  MODIFY_FUNCTION()
         // Applies a reflection to the function AST
 
-        tree ← altered_function.getFunction()
+        tree ← altered_function.GET_FUNCTION()
 
         IF axis = "x" THEN
-            tree ← reflectXAxis(tree)
+            tree ← REFLECT_X_AXIS(tree)
         ELSE IF axis = "y" THEN
-            tree ← reflectYAxis(tree)
+            tree ← REFLECT_Y_AXIS(tree)
         ENDIF
 
-        altered_function.setFunction(tree)
+        altered_function.SET_FUNCTION(tree)
 
         RETURN altered_function
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS
 
 
