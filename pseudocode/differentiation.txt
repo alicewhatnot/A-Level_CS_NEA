@@ -81,10 +81,8 @@ SUBROUTINE DIFFERENTIATE(node)
         // Splits tan into sin/cos to differentiate
         ELSE IF function = "tan" THEN
             cos_node ← NEW ASTNODE("FUNCTION", "cos", argument, NULL)
-            exponent ← NEW ASTNODE("NUMBER", "2", NULL, NULL)
-            cos_squared ← NEW ASTNODE("OP", "**", cos_node, exponent)
-
-            one ← NEW ASTNODE("NUMBER", "1", NULL, NULL)
+            cos_squared ← NEW ASTNODE("OP", "*", cos_node, cos_node)
+            one NEW ← ASTNODE("NUMBER", "1", NULL, NULL)
             reciprocal ← NEW ASTNODE("OP", "/", one, cos_squared)
 
             RETURN NEW ASTNODE("OP", "*", reciprocal, argument_differentiated)
