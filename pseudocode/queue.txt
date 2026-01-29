@@ -1,7 +1,15 @@
-CLASS Queue
-    SUBROUTINE Initialise(max_size)
+CLASS QUEUE
+    ATTRIBUTES
+        PRIVATE items : LIST
+        PRIVATE front : INTEGER
+        PRIVATE rear : INTEGER
+        PRIVATE size : INTEGER
+        PRIVATE max_size : INTEGER
+    ENDATTRIBUTES
+
+    CONSTRUCTOR (max_size)
         // Create fixed-size array for queue items
-        items ← array of size max_size filled with NONE
+        items ← EMPTY LIST
 
         // Index of the front of the queue
         front ← 0
@@ -14,25 +22,24 @@ CLASS Queue
 
         // Maximum size of the queue
         max_size ← max_size
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE enqueue(value)
+    PUBLIC METHOD ENQUEUE(value)
         // Adds an item to the rear of the queue
 
-        IF isFull() THEN
-            OUTPUT "Queue Overflow"
+        IF IS_FULL() THEN
             RETURN
         ENDIF
 
         rear ← (rear + 1) MOD max_size
         items[rear] ← value
         size ← size + 1
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE dequeue()
+    PUBLIC METHOD DEQUEUE()
         // Removes and returns the item at the front of the queue
 
-        IF isEmpty() THEN
+        IF IS_EMPTY() THEN
             RETURN NONE
         ENDIF
 
@@ -43,23 +50,23 @@ CLASS Queue
         size ← size - 1
 
         RETURN item
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE isEmpty()
+    PUBLIC METHOD IS_EMPTY()
         // Returns TRUE if the queue is empty
         RETURN size = 0
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE isFull()
+    PUBLIC METHOD IS_FULL()
         // Returns TRUE if the queue is full
         RETURN size = max_size
     ENDSUBROUTINE
 
-    SUBROUTINE clear()
+    PUBLIC METHOD CLEAR()   
         // Removes all items from the queue
 
-        WHILE isEmpty() = FALSE
-            dequeue()
+        WHILE IS_EMPTY() = FALSE
+            DEQUEUE()
         ENDWHILE
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS

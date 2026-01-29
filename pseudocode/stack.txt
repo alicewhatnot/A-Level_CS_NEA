@@ -1,16 +1,22 @@
-CLASS Stack
-    SUBROUTINE Initialise(max_size)
+CLASS STACK
+    ATTRIBUTES
+        PRIVATE items : LIST
+        PRIVATE top_index : INTEGER
+        PRIVAVTE max_size : INTEGER
+    ENDATTRIBUTES
+    
+    CONSTRUCTOR (max_size)
         // Create fixed-size array for stack items
-        items ← array of size max_size filled with NONE
+        items ← EMPTY LIST
 
         // Index of the next free position (top of stack)
         top_index ← 0
 
         // Maximum size of the stack
         max_size ← max_size
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE push(value)
+    PUBLIC METHOD PUSH(value)
         // Adds a value to the top of the stack
 
         IF top_index = max_size THEN
@@ -20,13 +26,12 @@ CLASS Stack
 
         items[top_index] ← value
         top_index ← top_index + 1
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE pop()
+    PUBLIC METHOD POP()
         // Removes and returns the top value from the stack
 
         IF top_index = 0 THEN
-            OUTPUT "Stack Underflow"
             RETURN NONE
         ENDIF
 
@@ -35,25 +40,25 @@ CLASS Stack
         items[top_index] ← NONE
 
         RETURN value
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE top()
+    PUBLIC METHOD TOP()
         // Returns the top value without removing it
 
         IF top_index = 0 THEN
             RETURN NONE
         ENDIF
 
-        RETURN items[top_index - 1]
-    ENDSUBROUTINE
+        RETURN items[top_index]
+    ENDMETHOD
 
-    SUBROUTINE empty()
+    PUBLIC METHOD EMPTY()
         // Returns TRUE if the stack is empty
         RETURN top_index = 0
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE size()
+    PUBLIC METHOD SIZE()
         // Returns the number of items in the stack
         RETURN top_index
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS
