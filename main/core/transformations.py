@@ -1,5 +1,4 @@
-from core.ast import ASTNode
-import math 
+from core.ast import ASTNode, printAST
 
 def reflectXAxis(node):
     """
@@ -7,8 +6,12 @@ def reflectXAxis(node):
     """
     if node is None:
         return None
+    print("")
+    printAST(node)
     negative_one = ASTNode("NUMBER", "-1", None, None)
-    return ASTNode("OP", "*", negative_one, node)
+    newNode = ASTNode("OP", "*", negative_one, node)
+    printAST(newNode)
+    return newNode
 
 
 def reflectYAxis(node):
@@ -17,15 +20,20 @@ def reflectYAxis(node):
     """
     if node is None:
         return None
-    elif node.type == "NAME":
+    print("")
+    printAST(node)
+    if node.type == "NAME":
         negative_one = ASTNode("NUMBER", "-1", None, None)
-        return ASTNode("OP", "*", negative_one, node)
+        newNode = ASTNode("OP", "*", negative_one, node)
+        printAST(newNode)
+        return newNode
     else:
         # Recursively reflect left and right subtrees
         if node.left:
             node.left = reflectYAxis(node.left)
         if node.right:
             node.right = reflectYAxis(node.right)
+        printAST(node)
         return node
 
 
@@ -35,16 +43,20 @@ def shiftX(node, shift):
     """
     if node is None:
         return None
-    elif node.type == "NAME":
+    print("")
+    printAST(node)
+    if node.type == "NAME":
         shift_amount = ASTNode("NUMBER", str(shift), None, None)
-        return ASTNode("OP", "-", node, shift_amount)
+        newNode = ASTNode("OP", "-", node, shift_amount)
+        printAST(newNode)
+        return newNode
     else:
         if node.left:
             node.left = shiftX(node.left, shift)
         if node.right:
             node.right = shiftX(node.right, shift)
+        printAST(node)
         return node
-
 
 
 def shiftY(node, shift):
@@ -53,8 +65,12 @@ def shiftY(node, shift):
     """
     if node is None:
         return None
+    print("")
+    printAST(node)
     shift_amount = ASTNode("NUMBER", str(shift), None, None)
-    return ASTNode("OP", "+", node, shift_amount)
+    newNode = ASTNode("OP", "+", node, shift_amount)
+    printAST(newNode)
+    return newNode
 
 
 def stretchX(node, stretch):
@@ -63,14 +79,19 @@ def stretchX(node, stretch):
     """
     if node is None:
         return None
-    elif node.type == "NAME":
+    print("")
+    printAST(node)
+    if node.type == "NAME":
         factor = ASTNode("NUMBER", str(stretch), None, None)
-        return ASTNode("OP", "/", node, factor)
+        newNode = ASTNode("OP", "/", node, factor)
+        printAST(newNode)
+        return newNode
     else:
         if node.left:
             node.left = stretchX(node.left, stretch)
         if node.right:
             node.right = stretchX(node.right, stretch)
+        printAST(node)
         return node
 
 
@@ -80,5 +101,9 @@ def stretchY(node, stretch):
     """
     if node is None:
         return None
+    print("")
+    printAST(node)
     factor = ASTNode("NUMBER", str(stretch), None, None)
-    return ASTNode("OP", "*", factor, node)
+    newNode = ASTNode("OP", "*", factor, node)
+    printAST(newNode)
+    return newNode

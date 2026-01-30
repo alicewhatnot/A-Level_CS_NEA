@@ -133,7 +133,7 @@ class AnimationController:
         progress_safe = max(0.0, min(progress, 1.0))
 
         # Animates shifts stretches and reflections 
-        intermediate_function = self.applyTransformation(self.base_function, self.transformation, progress_safe)
+        intermediate_function = self.applyIntermediateTransformation(self.base_function, self.transformation, progress_safe)
 
         if progress >= 1.0:
             # Finish this transformation
@@ -154,7 +154,7 @@ class AnimationController:
         self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees)
         self.graph_plotter.drawFunction(screen, intermediate_function, use_degrees=self.use_degrees)
 
-    def applyTransformation(self, base_function, transformation, progress):
+    def applyIntermediateTransformation(self, base_function, transformation, progress):
         # Calculates the intermediate functions from original -> transformed
         # Shift and stretch are simple linear animations, reflect uses non-linear animating
         if transformation.getType() == "shift":
@@ -223,7 +223,7 @@ class AnimationController:
 
         return True
     
-    def toggle_pause(self):
+    def togglePause(self):
         """Pause or resume animation in a safe way."""
         if self.paused or self.pending_pause:
             self.paused = False
@@ -234,7 +234,7 @@ class AnimationController:
             elif self.in_gap:
                 self.paused = True
 
-    def force_resume(self):
+    def forceResume(self):
         """
         Resume from pause if any, for use when wiping animation
         """

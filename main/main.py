@@ -200,7 +200,7 @@ while running:
         if submit_trans_button.isClicked(event) and function_entered and current_tab == "transformations":
 
             # Clear the animation queue before adding
-            animation_controller.force_resume()
+            animation_controller.forceResume()
             pause_button.setState(True)
             animation_controller.queue.clear()
             animation_controller.animating = False
@@ -218,7 +218,7 @@ while running:
 
         #Pausing
         if pause_button.handle_event(event):
-            animation_controller.toggle_pause()
+            animation_controller.togglePause()
 
         # Differentiate
         if differentiate_button.isClicked(event) and function_entered and current_tab == "differentiation":
@@ -264,7 +264,7 @@ while running:
             current_tab = "differentiation"
 
             # Stop any animations that might be occuring
-            animation_controller.force_resume()
+            animation_controller.forceResume()
             pause_button.setState(True)
             animation_controller.queue.clear()
             animation_controller.animating = False

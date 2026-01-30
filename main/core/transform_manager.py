@@ -35,8 +35,6 @@ class TransformManager:
             modifier = StretchFunction(self.current_function, transformation.axis, transformation.value)
         elif transformation.type == "reflect":
             modifier = ReflectFunction(self.current_function, transformation.axis)
-        elif transformation.type == "differentiate":
-            modifier = DifferentiateFunction(self.current_function)
 
         if modifier:
             new_func = modifier.ModifyFunction()
