@@ -1,125 +1,79 @@
-CLASS TransformManager
+CLASS TRASNFORM_MANAGER
     // Manages a function and a queue of transformations
     // Responsible for applying transformations in the correct order
 
-    SUBROUTINE Initialise(input_expression)
+    ATTRIBUTES
+        PRIVATE transformations_queue : QUEUE OBJECT
+        PRIVATE current_function : FUNCTION OBJECT
+    ENDATTRIBUTES
+
+    CONSTRUCTOR (input_expression)
         // Queue storing transformations to be applied
-        transformations_queue ← new Queue(6)
-
-        // Original base function
-        original_function ← input_expression
-
+        transformations_queue ← NEW QUEUE(6)
         // Function currently being transformed
         current_function ← input_expression
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE addTransformations(x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect)
+    PUBLIC METHOD ADD_TRANSFORMATIONS(x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect)
         // Adds given transformations to the queue
-        transformations_queue ← enqueueTransformations(
-            x_stretch_box,
-            y_stretch_box,
-            x_shift_box,
-            y_shift_box,
-            x_reflect,
-            y_reflect
-        )
-    ENDSUBROUTINE
+        transformations_queue.ENQUEUE(x_stretch_box)
+        transformations_queue.ENQUEUE(Y_stretch_box)
+        transformations_queue.ENQUEUE(x_shift_box)
+        transformations_queue.ENQUEUE(Y_shift_box)
+        transformations_queue.ENQUEUE(x_reflect)
+        transformations_queue.ENQUEUE(Y_reflect)
+    ENDMETHOD
 
-    SUBROUTINE applyTransformation(transformation, update_base)
+    PUBLIC METHOD APPLY_TRANSFORMATION(transformation)
         // Applies a single transformation to the current function
 
-        modifier ← NONE
+        new_function ← NULL
 
-        IF transformation.type = "shift" THEN
-            modifier ← new ShiftFunction(current_function, transformation.axis, transformation.value)
+        IF transformation.TYPE = "shift" THEN
+            new_function ← NEW SHIFT_FUNCTION(current_function, transformation.axis, transformation.value)
 
-        ELSE IF transformation.type = "stretch" THEN
-            modifier ← new StretchFunction(current_function, transformation.axis, transformation.value)
+        ELSE IF transformation.TYPE = "stretch" THEN
+            new_function ← NEW STRETCH_FUNCTION(current_function, transformation.axis, transformation.value)
 
-        ELSE IF transformation.type = "reflect" THEN
-            modifier ← new ReflectFunction(current_function, transformation.axis)
+        ELSE IF transformation.TYPE = "reflect" THEN
+            new_function ← NEW REFLECT_FUNCTION(current_function, transformation.axis)
 
-        ELSE IF transformation.type = "differentiate" THEN
-            modifier ← new DifferentiateFunction(current_function)
+        ELSE IF transformation.TYPE = "differentiate" THEN
+            new_function ← NEW DIFFERENTIATE_FUNCTION(current_function)
         ENDIF
 
-        IF modifier ≠ NONE THEN
-            new_function ← modifier.ModifyFunction()
-
-            IF update_base = TRUE THEN
-                current_function ← new_function
-            ENDIF
-
+        IF new_function <> NULL THEN
             RETURN new_function
         ENDIF
 
-        RETURN NONE
-    ENDSUBROUTINE
+        RETURN NULL
+    ENDMETHOD
 
-    SUBROUTINE applyAllTransformations(graph_plotter)
+    PUBLIC METHOD APPLY_ALL_TRANSFORMATIONS(graph_plotter)
         // Applies every transformation in the queue sequentially
 
-        WHILE transformations_queue.isEmpty() = FALSE
-            transformation ← transformations_queue.dequeue()
-            new_function ← applyTransformation(transformation, TRUE)
-            graph_plotter.plotSubsequent(new_function)
+        WHILE transformations_queue.IS_EMPTY() = FALSE
+            transformation ← transformations_queue.DEQUEUE()
+            new_function ← APPLY_TRANSFORMATION(transformation, TRUE)
+            graph_plotter.PLOT_SUBSEQUENT(new_function)
         ENDWHILE
 
         // Reset queue after all transformations applied
-        transformations_queue ← new Queue(6)
-    ENDSUBROUTINE
+        transformations_queue ← NEW QUEUE(6)
+    ENDMETHOD
 
-    SUBROUTINE getCurrentFunction()
+    PUBLIC METHOD GET_CURRENT_FUNCTION()
         // Returns the current function
         RETURN current_function
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE nextTransformation()
-        // Applies the next transformation only
-
-        IF transformations_queue.isEmpty() THEN
-            RETURN NONE
-        ENDIF
-
-        // Get next transformation
-        transformation ← transformations_queue.dequeue()
-
-        // Create copy of current function
-        ast_copy ← copyAST(current_function.getFunction())
-        var_copy ← current_function.getVariable()
-        new_function ← new Function(ast_copy, var_copy)
-
-        modifier ← NONE
-
-        IF transformation.getType() = "shift" THEN
-            modifier ← new ShiftFunction(new_function, transformation.getAxis(), transformation.getVal())
-
-        ELSE IF transformation.getType() = "stretch" THEN
-            modifier ← new StretchFunction(new_function, transformation.getAxis(), transformation.getVal())
-
-        ELSE IF transformation.getType() = "reflect" THEN
-            modifier ← new ReflectFunction(new_function, transformation.getAxis())
-
-        ELSE IF transformation.getType() = "differentiate" THEN
-            modifier ← new DifferentiateFunction(new_function)
-        ENDIF
-
-        IF modifier ≠ NONE THEN
-            current_function ← modifier.ModifyFunction()
-            RETURN current_function
-        ENDIF
-
-        RETURN NONE
-    ENDSUBROUTINE
-
-    SUBROUTINE setBaseFunction(new_function)
+    PUBLIC METHOD SET_BASE_FUNCTION(new_function)
         // Sets a new base function for repeated transformations
         current_function ← new_function
-        transformations_queue ← new Queue(1)
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE hasTransformations()
+    PUBLIC METHOD HAS_TRANSFORMATIONS()
         // Returns TRUE if transformations remain in the queue
-        RETURN transformations_queue.isEmpty() = FALSE
-    ENDSUBROUTINE
+        RETURN transformations_queue.IS_EMPTY() = FALSE
+    ENDMETHOD
 ENDCLASS
