@@ -25,7 +25,7 @@ class AnimationController:
         self.use_degrees =  True      
         self.paused = False
         self.pending_pause = False
-
+        self.xshifting = False
 
     def setUseDegrees(self, flag):
             self.use_degrees = flag
@@ -166,7 +166,8 @@ class AnimationController:
             # Copies and modifies the original function by the transformation amount scaled by progress
             intermediate_value = 1 + (transformation.getVal() - 1) * progress
             modifier = StretchFunction(Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour()),transformation.getAxis(), intermediate_value)
-
+            if transformation.getAxis() == "x":
+                self.xshifting = True
         elif transformation.getType() == "reflect":
             # Nonlinear as an attempt to distinguish a reflect from a scale of -1
             nonlinear_progress = math.sin(progress * math.pi / 2)
@@ -174,15 +175,13 @@ class AnimationController:
             
             temp_func = Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour())
 
-            if progress < 1:
-                # Uses stretch during the animation to stretch from 1 -> -1
-                if transformation.getAxis() == 'x':
-                    modifier = StretchFunction(temp_func, 'y', scale)
-                else:  # 'y'
-                    modifier = StretchFunction(temp_func, 'x', scale)
-            else:
-                modifier = ReflectFunction(temp_func, transformation.getAxis())
-
+            # Uses stretch during the animation to stretch from 1 -> -1
+            if transformation.getAxis() == 'x':
+                modifier = StretchFunction(temp_func, 'y', scale)
+            else:  # 'y'
+                if self.xshifting:
+                    scale = scale*360/(2*math.pi)
+                modifier = StretchFunction(temp_func, 'x', scale)
         else:
             # If no transformation found just return the function
             return Function(copyAST(base_function.getFunction()), base_function.getFunctionVar())

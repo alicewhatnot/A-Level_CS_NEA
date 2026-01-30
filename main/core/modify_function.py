@@ -1,6 +1,6 @@
 from core.transformations import reflectXAxis, reflectYAxis, shiftX, shiftY, stretchX, stretchY
 from core.differentiation import differentiate
-from core.ast import simplifyAST
+from core.ast import simplifyAST, simplifyTrigPhase
 from core.ast import printAST
 
 # Base class for all types of function modification
@@ -52,6 +52,8 @@ class ShiftFunction(ModifyFunction):
             tree = shiftX(tree, self.value)
         elif self.axis == "y":
             tree = shiftY(tree, self.value)
+
+        tree = simplifyTrigPhase(tree)
         self.altered_function.setFunction(tree)
         return self.altered_function
 
@@ -71,6 +73,8 @@ class StretchFunction(ModifyFunction):
             tree = stretchX(tree, self.value)
         elif self.axis == "y":
             tree = stretchY(tree, self.value)
+
+        tree = simplifyTrigPhase(tree)
         self.altered_function.setFunction(tree)
         return self.altered_function
 
@@ -89,5 +93,7 @@ class ReflectFunction(ModifyFunction):
             tree = reflectXAxis(tree)
         elif self.axis == "y":
             tree = reflectYAxis(tree)
+
+        tree = simplifyTrigPhase(tree)
         self.altered_function.setFunction(tree)
         return self.altered_function

@@ -2,7 +2,7 @@ from core.modify_function import ReflectFunction, ShiftFunction, StretchFunction
 from core.queue import Queue
 from core.function import Function 
 from core.transformations_entry import enqueueTransformations
-from core.ast import copyAST
+from core.ast import copyAST, printAST
 
 class TransformManager:
     """
@@ -28,9 +28,8 @@ class TransformManager:
         Applies a given transformation to the current function
         """
         modifier = None
-
         if transformation.type == "shift":
-            modifier = ShiftFunction(self.current_function, transformation.axis, transformation.value)
+            modifier = ShiftFunction(self.current_function, transformation.axis, transformation.value) # multiply value by time location? so in apply trans pass in time too default 1
         elif transformation.type == "stretch":
             modifier = StretchFunction(self.current_function, transformation.axis, transformation.value)
         elif transformation.type == "reflect":
@@ -83,8 +82,6 @@ class TransformManager:
             modifier = StretchFunction(new_func, transformation.getAxis(), transformation.getVal())
         elif transformation.getType() == "reflect":
             modifier = ReflectFunction(new_func, transformation.getAxis())
-        elif transformation.getType() == "differentiate":
-            modifier = DifferentiateFunction(new_func)
 
         if modifier:
             # Create a new function from the modifier and store as the current function

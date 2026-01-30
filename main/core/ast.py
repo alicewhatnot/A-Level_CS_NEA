@@ -105,75 +105,77 @@ def postfixToAST(postfix_queue):
     print ("AST Created")
     return node_stack.pop()
 
-def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=False ,needs_converting=True):
+
+def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=False, needs_converting=True):
     """
-    Recursively evaluates AST for a given value along the axis
+    Recursively evaluates an AST for a given variable value.
+    - `inside_trig`: True if the current node is inside a trig function
+    - `needs_converting`: True if NUMBER leaves should be converted from degrees to radians
     """
+
     if node is None:
         return None
-    # Return the number 
+
+    # Numbers
     if node.type == "NUMBER":
         val = float(node.value)
-        # Converts to radians if is degrees and is not mul / div by the variable
         if use_degrees and inside_trig and needs_converting:
-            return math.radians(val)  
+            return math.radians(val)
         return val
 
-    # Return the value of the variable at that point along the axis
-    if node.type == "NAME" and node.value == variable:
-        return float(variable_value)
+    # Variable
+    if node.type == "NAME":
+        if node.value == variable:
+            return float(variable_value)
+        return None  # unknown variable
 
     # Operators
     if node.type == "OP":
-        #Determine if children needs converting
+        # Determine whether children need converting
         left_needs_converting = needs_converting
         right_needs_converting = needs_converting
 
-        # Dont convert children if they're mul / div the variable
+        # Only suppress conversion for NUMBER * NAME or NAME * NUMBER at any depth
         if inside_trig and node.value in ("*", "/"):
             if node.left.type == "NUMBER" and node.right.type == "NAME":
                 left_needs_converting = False
             elif node.left.type == "NAME" and node.right.type == "NUMBER":
                 right_needs_converting = False
 
-        # Fetch value of the left and right nodes
-        left = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig, left_needs_converting)
-        right = evaluateAST(node.right, variable_value, variable, use_degrees, inside_trig, right_needs_converting)
+        # Recursively evaluate left and right
+        left_val = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig, left_needs_converting)
+        right_val = evaluateAST(node.right, variable_value, variable, use_degrees, inside_trig, right_needs_converting)
 
-        if left is None or right is None:
+        if left_val is None or right_val is None:
             return None
 
         try:
-            # Perform the operators
-            if node.value == "+": 
-                return left + right
-            elif node.value == "-": 
-                return left - right
-            elif node.value == "*": 
-                return left * right
-            elif node.value == "/": 
-                return left / right
-            elif node.value == "**": 
-                return left ** right
+            if node.value == "+": return left_val + right_val
+            if node.value == "-": return left_val - right_val
+            if node.value == "*": return left_val * right_val
+            if node.value == "/": return left_val / right_val
+            if node.value == "**": return left_val ** right_val
         except Exception:
             return None
 
-    # Evaluate the functions
+    # Functions
     if node.type == "FUNCTION":
-        # When evaluating inside trig, set inside_trig=True
-        argument = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig=True)
-        if argument is None:
+        # Inside a trig function now
+        arg_val = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig=True, needs_converting=True)
+        if arg_val is None:
             return None
-        if node.value == "sin": 
-            return math.sin(argument)
-        elif node.value == "cos": 
-            return math.cos(argument)
-        elif node.value == "tan": 
-            return math.tan(argument)
-        elif node.value == "ln":
-            return math.log(argument)
+
+        try:
+            if node.value == "sin": return math.sin(arg_val)
+            if node.value == "cos": return math.cos(arg_val)
+            if node.value == "tan": return math.tan(arg_val)
+            if node.value == "ln": return math.log(arg_val)
+        except Exception:
+            return None
 
     return None
+
+
 
 def copyAST(node):
     """
@@ -341,6 +343,51 @@ def simplifyAST(node):
             return ASTNode("NUMBER", "0")
 
         return node
+
+    return node
+    
+def simplifyTrigPhase(node):
+    """
+    Simplifies sin((x ± c)/k) into sin(x/k ± c/k) form.
+    Works only for addition or subtraction in the numerator.
+    """
+    if node is None:
+        return None
+
+    # Recursively simplify children first
+    node.left = simplifyTrigPhase(node.left)
+    node.right = simplifyTrigPhase(node.right)
+
+    # Only look inside trig functions
+    if node.type == "FUNCTION" and node.value in ("sin", "cos", "tan"):
+        arg = node.left
+
+        # Check if argument is a division
+        if arg.type == "OP" and arg.value == "/":
+            numerator = arg.left
+            denominator = arg.right
+
+            # Only handle addition or subtraction in numerator
+            if numerator.type == "OP" and numerator.value in ("+", "-") and denominator.type == "NUMBER":
+                left = numerator.left
+                right = numerator.right
+
+                # Determine which is variable and which is number
+                if left.type == "NAME" and right.type == "NUMBER":
+                    new_left = ASTNode("OP", "/", left, copyAST(denominator))
+                    new_right = ASTNode("NUMBER", str(float(right.value)/float(denominator.value)))
+                    new_arg = ASTNode("OP", numerator.value, new_left, new_right)
+                    node.left = new_arg
+                    return node
+
+                if left.type == "NUMBER" and right.type == "NAME":
+                    new_left = ASTNode("OP", "/", right, copyAST(denominator))
+                    new_right = ASTNode("NUMBER", str(float(left.value)/float(denominator.value)))
+                    # Flip operator if number is on the left
+                    op = "+" if numerator.value == "+" else "-"
+                    new_arg = ASTNode("OP", op, new_left, new_right)
+                    node.left = new_arg
+                    return node
 
     return node
 
