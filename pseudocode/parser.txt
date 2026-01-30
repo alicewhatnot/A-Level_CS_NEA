@@ -1,12 +1,12 @@
-SUBROUTINE tokenize(expression)
+SUBROUTINE TOKENIZE(expression)
     // Returns a two dimensional array of all characters in the expression and their associated token
 
     // Initialise variables and clean the expression
-    tokens ← empty list
+    tokens ← LIST
     index ← 0
     valid_characters ← TRUE
-    expression ← expression with spaces removed
-    expression ← expression with "^" replaced by "**"
+    expression ← expression.REPLACE(" ", "")
+    expression ← expression.REPLACE("^", "**")
 
     // Regex patterns to look for in the expression
     patterns ←
@@ -74,7 +74,7 @@ SUBROUTINE tokenize(expression)
     ENDIF
 ENDSUBROUTINE
 
-SUBROUTINE insertImplicitMultiplication(tokens)
+SUBROUTINE INSERT_IMPLICIT_MULTIPLICATION(tokens)
     // Adds multiplication where the user would consider it to be implicit
 
     new_tokens ← empty list
@@ -101,8 +101,7 @@ SUBROUTINE insertImplicitMultiplication(tokens)
     RETURN new_tokens
 ENDSUBROUTINE
 
-
-SUBROUTINE validateTokens(tokens)
+SUBROUTINE VALIDATE_TOKENS(tokens)
     // Checks if the order of the tokens array is valid
 
     parenthesis_balance ← 0
@@ -110,19 +109,19 @@ SUBROUTINE validateTokens(tokens)
     variable ← NONE
 
     FOR index FROM 0 TO length(tokens) - 1
-        token ← tokens[index].type
-        value ← tokens[index].value
+        token ← tokens[index].TYPE
+        value ← tokens[index].VALUE
 
         // Only sets prev_token if one exists
         IF index > 0 THEN
-            prev_token ← tokens[index - 1].type
+            prev_token ← tokens[index - 1].TYPE
         ELSE
             prev_token ← NONE
         ENDIF
 
         // Only sets next_token if one exists
         IF index < length(tokens) - 1 THEN
-            next_token ← tokens[index + 1].type
+            next_token ← tokens[index + 1].TYPE
         ELSE
             next_token ← NONE
         ENDIF
@@ -138,12 +137,12 @@ SUBROUTINE validateTokens(tokens)
         ENDIF
 
         // Checking for double operators, only allows if the second is a negative
-        IF prev_token = "OP" AND token = "OP" AND value ≠ "-" THEN
+        IF prev_token = "OP" AND token = "OP" AND value <> "-" THEN
             RETURN FALSE, variable
         ENDIF
 
         // Checking if a trigonometric function is followed by a parenthesis
-        IF token = "FUNCTION" AND next_token ≠ "LEFTPARENTHESIS" THEN
+        IF token = "FUNCTION" AND next_token <> "LEFTPARENTHESIS" THEN
             RETURN FALSE, variable
         ENDIF
 
@@ -152,7 +151,7 @@ SUBROUTINE validateTokens(tokens)
             IF variable_found = FALSE THEN
                 variable ← value
                 variable_found ← TRUE
-            ELSE IF value ≠ variable THEN
+            ELSE IF value <> variable THEN
                 RETURN FALSE, variable
             ENDIF
         ENDIF
@@ -167,8 +166,8 @@ SUBROUTINE validateTokens(tokens)
             ENDIF
 
             // NAME ** NAME
-            prev_value ← tokens[index - 1].value
-            next_value ← tokens[index + 1].value
+            prev_value ← tokens[index - 1].VALUE
+            next_value ← tokens[index + 1].VALUE
 
             IF prev_token = "NAME" AND next_token = "NAME" AND prev_value = next_value THEN
                 RETURN FALSE, variable
@@ -182,35 +181,29 @@ SUBROUTINE validateTokens(tokens)
     ENDFOR
 
     // Final check if the last token is an operator or if the parenthesis balance is incorrect
-    IF last token type = "OP" OR parenthesis_balance ≠ 0 THEN
+    IF last token type = "OP" OR parenthesis_balance <> 0 THEN
         RETURN FALSE, variable
     ENDIF
 
     RETURN TRUE, variable
 ENDSUBROUTINE
 
-SUBROUTINE parse(expression)
+SUBROUTINE PARSE(expression)
     // Brings together the three subroutines involved in parsing the expression
 
-    tokens ← tokenize(expression)
-    OUTPUT "Expression Tokenized"
+    tokens ← TOKENIZE(expression)
 
     IF tokens = NONE THEN
-        OUTPUT "Invalid Tokens"
         RETURN empty list, NONE
     ENDIF
 
-    tokens ← insertImplicitMultiplication(tokens)
-    OUTPUT "Multiplication Inserted"
+    tokens ← INSERT_IMPLICIT_MULTIPLICATION(tokens)
 
     valid, variable ← validateTokens(tokens)
 
     IF valid = FALSE THEN
-        OUTPUT "Invalid Tokens"
         RETURN empty list, NONE
     ENDIF
-
-    OUTPUT "Returning Valid Tokens"
 
     FOR EACH token IN tokens
         OUTPUT token

@@ -98,12 +98,13 @@ def differentiate(node):
             negative_sin = ASTNode("OP", "*", sin_node, negative)
             return ASTNode("OP", "*", negative_sin, argument_differentiated)
         
-        # Splits tan into sin/cos to differentiate
+        # Also using chain rule for tan
         elif function == "tan":
             cos_node = ASTNode("FUNCTION", "cos", argument, None)
-            cos_squared = ASTNode("OP", "**", cos_node, ASTNode("NUMBER", "2", None, None))
-            reciprocal = ASTNode("OP", "/", ASTNode("NUMBER", "1", None, None), cos_squared)
+            cos_squared = ASTNode("OP", "*", cos_node, cos_node)
+            reciprocal = ASTNode("OP", "/", ASTNode("NUMBER", "1"), cos_squared)
             return ASTNode("OP", "*", reciprocal, argument_differentiated)
+
 
     # Safety catch if the node cannot be differentiated
     return None

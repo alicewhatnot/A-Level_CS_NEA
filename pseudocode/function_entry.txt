@@ -1,12 +1,19 @@
 CLASS FunctionEntry
-    SUBROUTINE Initialise(user_input)
+    ATTRIBUTES
+        PRIVATE user_input : STRING
+        PRIVATE tokens : LIST
+        PRIVAVTE variable : STRING
+        PRIVATE ast : ASTNODE OBJECT OR NULL
+    ENDATTRIBUTES
+    
+    CONSTRUCTOR (user_input)
         user_input ← user_input
         tokens ← EMPTY LIST
         variable ← EMPTY STRING
         ast ← NULL
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE ParseFunction()
+    PUBLIC METHOD PARSE_FUNCTION()
         // Tokenise the user input string
         tokens, variable ← PARSE(user_input)
 
@@ -15,27 +22,25 @@ CLASS FunctionEntry
         ENDIF
 
         RETURN TRUE
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE FunctionAST()
+    PUBLIC METHOD FUNCTION_AST()
         // Convert tokens to postfix then build the AST
         IF tokens IS EMPTY THEN
-            // ValueError: Token list is empty
             RETURN
         ENDIF
 
         tokens ← POSTFIX(tokens)
         ast ← POSTFIX_TO_AST(tokens)
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE OutputFunction()
+    PUBLIC METHOD OUTPUT_FUNCTION()
         // Return the AST
         IF ast = NULL THEN
-            // ValueError: No AST found
             RETURN NULL
         ELSE
             OUTPUT "Function Variable:", variable
             RETURN ast, variable
         ENDIF
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS

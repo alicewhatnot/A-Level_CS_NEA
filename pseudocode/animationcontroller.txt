@@ -1,11 +1,32 @@
-CLASS AnimationController
-    // Constructor
-    SUBROUTINE Initialise(graph_plotter, duration, gap)
+CLASS ANIMATION_CONTROLLER
+    
+    ATTRIBUTES
+        PRIVATE graph_plotter : GRAPH_PLOTTER OBJECT
+        PRIVATE duration : INTEGER
+        PRIVATE gap : INTEGER
+        PRIVATE queue : Queue OBJECT
+        PRIVATE animating : BOOLEAN
+        PRIVATE start_time : INTEGER
+        PRIVATE base_function : FUNCTION OBJECT
+        PRIVATE transformation : TRANSFORMATION OBJECT
+        PRIVATE current_function : FUNCTION OBJECT
+        PRIVATE in_gap : BOOLEAN
+        PRIVATE gap_start_time : INTEGER
+        PRIVATE transform_manager : TRANSFORM_MANAGER OBJECT
+        PRIVATE top_function : FUNCTION OBJECT
+        PRIVATE bottom_function : FUNCTION OBJECT
+        PRIVATE differentiating : BOOLEAN
+        PRIVATE use_degrees : BOOLEAN
+        PRIVATE paused : BOOLEAN
+        PRIVATE pending_pause : BOOLEAN
+    ENDATTRIBUTES 
+
+    CONSTRUCTOR (graph_plotter, duration, gap)
         graph_plotter ← graph_plotter
         duration ← duration
         gap ← gap
 
-        queue ← NEW Queue(size = 6)
+        queue ← NEW QUEUE(size = 6)
         animating ← FALSE
         start_time ← NULL
         base_function ← NULL
@@ -23,29 +44,29 @@ CLASS AnimationController
         use_degrees ← TRUE
         paused ← FALSE
         pending_pause ← FALSE
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE SetUseDegrees(flag)
+    PUBLIC METHOD SET_USE_DEGREES(flag)
         use_degrees ← flag
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE AddTransformManager(transform_manager)
+    PUBLIC METHOD ADD_TRANSFORM_MANAGER(transform_manager)
         // Add the transformation manager
         // This is a method not part of the constructor as the controller is created before the transformation manager
         transform_manager ← transform_manager
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE EnqueueAnimation(transformation)
+    PUBLIC METHOD ENQUEUE_ANIMATION(transformation)
         // Queues a transformation animation
         queue.ENQUEUE(transformation)
 
         // If nothing is animating, start animation immediately
         IF animating = FALSE THEN
-            CALL StartNext()
+            START_NEXT()
         ENDIF
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE StartNext()
+    PUBLIC METHOD START_NEXT()
         // Animates the first transformation in the queue
         IF queue.IS_EMPTY() THEN
             animating ← FALSE
@@ -55,7 +76,7 @@ CLASS AnimationController
         // Fetch the transformation and function for animation
         transformation ← queue.DEQUEUE()
 
-        IF current_function ≠ NULL THEN
+        IF current_function <> NULL THEN
             base_function ← current_function
         ELSE
             base_function ← graph_plotter.GET_BASE_FUNCTION()
@@ -64,13 +85,13 @@ CLASS AnimationController
         // Start animating and timing
         start_time ← CURRENT_TIME()
         animating ← TRUE
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE Update(screen, dual_view)
+    PUBLIC METHOD UPDATE(screen, dual_view)
         // Updates and renders the current animation state
 
         // Determine top and bottom functions for dual view (if present)
-        IF top_function ≠ NULL THEN
+        IF top_function <> NULL THEN
             top_func ← top_function
         ELSE
             top_func ← current_function
@@ -84,7 +105,7 @@ CLASS AnimationController
 
         // Dual view mode
         IF dual_view = TRUE THEN
-            CALL graph_plotter.DRAW_ALL(
+            graph_plotter.DRAW_ALL(
                 screen,
                 dual_view,
                 top_func,
@@ -103,13 +124,13 @@ CLASS AnimationController
             now ← CURRENT_TIME()
 
             // Draw original and current function
-            CALL graph_plotter.DRAW_FUNCTION(
+            graph_plotter.DRAW_FUNCTION(
                 screen,
                 graph_plotter.GET_BASE_FUNCTION(),
                 colour = GREY,
                 use_degrees
             )
-            CALL graph_plotter.DRAW_FUNCTION(
+            graph_plotter.DRAW_FUNCTION(
                 screen,
                 current_function,
                 use_degrees
@@ -121,14 +142,14 @@ CLASS AnimationController
             ENDIF
 
             // If pending pause when leaving gap then don't leave
-            IF now − gap_start_time ≥ gap THEN
+            IF now − gap_start_time >= gap THEN
                 IF pending_pause = TRUE THEN
                     pending_pause ← FALSE
                     paused ← TRUE
                 ELSE
                     // Otherwise leave
                     in_gap ← FALSE
-                    CALL StartNext()
+                    StartNext()
                 ENDIF
             ENDIF
             RETURN
@@ -136,10 +157,10 @@ CLASS AnimationController
 
         // No animation running
         IF animating = FALSE THEN
-            IF current_function ≠ NULL THEN
+            IF current_function <> NULL THEN
                 IF dual_view = TRUE THEN
                     // Draw top as base function, bottom as derivative if exists
-                    CALL graph_plotter.DRAW_ALL(
+                    graph_plotter.DRAW_ALL(
                         screen,
                         dual_view,
                         top_func,
@@ -148,13 +169,13 @@ CLASS AnimationController
                     )
                 ELSE
                     // Draw gray old function and the current transformed function
-                    CALL graph_plotter.DRAW_FUNCTION(
+                    graph_plotter.DRAW_FUNCTION(
                         screen,
                         graph_plotter.GET_BASE_FUNCTION(),
                         colour = GREY,
                         use_degrees
                     )
-                    CALL graph_plotter.DRAW_FUNCTION(
+                    graph_plotter.DRAW_FUNCTION(
                         screen,
                         current_function,
                         use_degrees
@@ -162,7 +183,7 @@ CLASS AnimationController
                 ENDIF
             ELSE
                 // If no function then draw whatever is in graph plotter
-                CALL graph_plotter.DRAW_ALL(screen, dual_view, use_degrees)
+                graph_plotter.DRAW_ALL(screen, dual_view, use_degrees)
             ENDIF
             RETURN
         ENDIF
@@ -172,7 +193,7 @@ CLASS AnimationController
         progress ← (now − start_time) / duration
 
         // Make sure the progress doesn't leave 0–1
-        progress ← CLAMP(progress, 0, 1)
+        progress ← MIN(0, MAX(progress, 1))
 
         // Animates shifts stretches and reflections
         intermediate_function ← ApplyTransformation(
@@ -181,7 +202,7 @@ CLASS AnimationController
             progress
         )
 
-        IF progress = 1 THEN
+        IF progress >= 1 THEN
             // Finish this transformation
             current_function ← intermediate_function
 
@@ -190,13 +211,13 @@ CLASS AnimationController
             gap_start_time ← CURRENT_TIME()
 
             // Draw the final frame for the first tick of the gap
-            CALL graph_plotter.DRAW_FUNCTION(
+            graph_plotter.DRAW_FUNCTION(
                 screen,
                 graph_plotter.GET_BASE_FUNCTION(),
                 colour = GREY,
                 use_degrees
             )
-            CALL graph_plotter.DRAW_FUNCTION(
+            graph_plotter.DRAW_FUNCTION(
                 screen,
                 current_function,
                 use_degrees
@@ -205,37 +226,37 @@ CLASS AnimationController
         ENDIF
 
         // Draw intermediate frame of gray original and intermediate animated function
-        CALL graph_plotter.DRAW_FUNCTION(
+        graph_plotter.DRAW_FUNCTION(
             screen,
             graph_plotter.GET_BASE_FUNCTION(),
             colour = GREY,
             use_degrees
         )
-        CALL graph_plotter.DRAW_FUNCTION(
+        graph_plotter.DRAW_FUNCTION(
             screen,
             intermediate_function,
             use_degrees
         )
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE ApplyTransformation(base_function, transformation, progress)
+    PUBLIC METHOD APPLY_TRANSFORMATION(base_function, transformation, progress)
         // Calculates the intermediate functions from original → transformed
         // Shift and stretch are simple linear animations, reflect uses non-linear animating
 
         IF transformation.TYPE = "shift" THEN
             // Copies and modifies the original function by the transformation amount scaled by progress
-            value ← progress × transformation.VALUE
+            value ← progress * transformation.VALUE
             RETURN Shift(base_function, transformation.AXIS, value)
 
         ELSE IF transformation.TYPE = "stretch" THEN
             // Copies and modifies the original function by the transformation amount scaled by progress
-            value ← 1 + (transformation.VALUE − 1) × progress
+            value ← 1 + (transformation.VALUE − 1) * progress
             RETURN Stretch(base_function, transformation.AXIS, value)
 
         ELSE IF transformation.TYPE = "reflect" THEN
             // Nonlinear as an attempt to distinguish a reflect from a scale of −1
-            nonlinear ← SIN(progress × π / 2)
-            scale ← 1 − 2 × nonlinear
+            nonlinear ← SIN(progress * π / 2)
+            scale ← 1 − 2 * nonlinear
 
             IF progress < 1 THEN
                 // Uses stretch during the animation to stretch from 1 → −1
@@ -251,9 +272,9 @@ CLASS AnimationController
 
         // If no transformation found just return the function
         RETURN COPY(base_function)
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE Differentiate()
+    PUBLIC METHOD DIFFERENTIATE()
         // Specific method for differentiating
         IF transform_manager = NULL THEN
             RETURN FALSE
@@ -270,7 +291,7 @@ CLASS AnimationController
         ENDIF
 
         // Update the transform manager
-        CALL transform_manager.SET_BASE_FUNCTION(derivative)
+        transform_manager.SET_BASE_FUNCTION(derivative)
 
         // Update attributes to be accessed by the update method
         top_function ← previous
@@ -278,25 +299,5 @@ CLASS AnimationController
         differentiating ← TRUE
 
         RETURN TRUE
-    ENDSUBROUTINE
-
-    SUBROUTINE TogglePause()
-        // Pause or resume animation in a safe way
-        IF paused = TRUE OR pending_pause = TRUE THEN
-            paused ← FALSE
-            pending_pause ← FALSE
-        ELSE
-            IF animating = TRUE THEN
-                pending_pause ← TRUE
-            ELSE IF in_gap = TRUE THEN
-                paused ← TRUE
-            ENDIF
-        ENDIF
-    ENDSUBROUTINE
-
-    SUBROUTINE ForceResume()
-        // Resume from pause if any, for use when wiping animation
-        paused ← FALSE
-        pending_pause ← FALSE
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS

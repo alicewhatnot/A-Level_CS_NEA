@@ -1,30 +1,33 @@
-CLASS ASTNode
-    SUBROUTINE Initialise(node_type, value, left, right)
+CLASS ASTNODE
+    ATTRIBUTES
+        PUBLIC type : STRING
+        PUBLIC value : STRING
+        PUBLIC left : ASTNODE OBJECT OR NULL
+        PUBLIC right : ASTNODE OBJECT OR NULL
+    ENDATTRIBUTES
+    
+    CONSTRUCTOR (node_type, value, left, right)
     type ← node_type
     value ← value
     left ← left
     right ← right
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 ENDCLASS
 
-SUBROUTINE Postfix(tokens)
+SUBROUTINE POSTFIX(tokens)
     // Produces a postfix version of the token list
     // Initialising variables and dictionaries
-    postfix_queue ← NEW Queue(size = 64)
-    operator_stack ← NEW Stack(size = 64)
+    postfix_queue ← NEW QUEUE(size = 64)
+    operator_stack ← NEW STACK(size = 64)
 
     // BIDMAS order of operations
-    precedence["+"] ← 1
-    precedence["-"] ← 1
-    precedence["*"] ← 2
-    precedence["/"] ← 2
-    precedence["**"] ← 3
+    precedence ← {
+        "+": 1, "-": 1, "*": 2, "/": 2, "**": 3
+    }
 
-    associativity["+"] ← "L"
-    associativity["-"] ← "L"
-    associativity["*"] ← "L"
-    associativity["/"] ← "L"
-    associativity["**"] ← "R"
+    associativity ← {
+        "+": "L", "-": "L", "*": "L", "/": "L", "**": "R"
+    }
 
     // Shunting yard algorithm for postfix production
     FOR index ← 0 TO LENGTH(tokens) − 1
@@ -44,7 +47,7 @@ SUBROUTINE Postfix(tokens)
             WHILE operator_stack.NOT_EMPTY() AND
                 operator_stack.TOP().TYPE = "OP" AND
                 (
-                    (associativity[value] = "L" AND precedence[value] ≤ precedence[operator_stack.TOP().VALUE]) OR
+                    (associativity[value] = "L" AND precedence[value] =< precedence[operator_stack.TOP().VALUE]) OR
                     (associativity[value] = "R" AND precedence[value] < precedence[operator_stack.TOP().VALUE])
                 )
                 postfix_queue.ENQUEUE(operator_stack.POP())
@@ -57,7 +60,7 @@ SUBROUTINE Postfix(tokens)
 
         // Right parenthesis
         ELSE IF token = "RIGHTPARENTHESIS" THEN
-            WHILE operator_stack.NOT_EMPTY() AND operator_stack.TOP().TYPE ≠ "LEFTPARENTHESIS"
+            WHILE operator_stack.NOT_EMPTY() AND operator_stack.TOP().TYPE <> "LEFTPARENTHESIS"
                 postfix_queue.ENQUEUE(operator_stack.POP())
             ENDWHILE
 
@@ -82,28 +85,28 @@ SUBROUTINE Postfix(tokens)
     RETURN postfix_queue
 ENDSUBROUTINE
 
-SUBROUTINE PostfixToAST(postfix_queue)
-    // Creates an AST from the postfix queue using the ASTNode class
-    node_stack ← NEW Stack(size = 64)
+SUBROUTINE POSTFIX_TO_AST(postfix_queue)
+    // Creates an AST from the postfix queue using the ASTNODE class
+    node_stack ← NEW STACK(size = 64)
     WHILE postfix_queue.NOT_EMPTY()
         token, value ← postfix_queue.DEQUEUE()
 
         // These will be leaves and so do not have children
         IF token = "NUMBER" OR token = "NAME" THEN
-            node ← NEW ASTNode(token, value, NULL, NULL)
+            node ← NEW ASTNODE(token, value, NULL, NULL)
             node_stack.PUSH(node)
 
         // These will only have a left child as the parameter of the function
         ELSE IF token = "FUNCTION" THEN
             operand ← node_stack.POP()
-            node ← NEW ASTNode(token, value, operand, NULL)
+            node ← NEW ASTNODE(token, value, operand, NULL)
             node_stack.PUSH(node)
 
         // These will use both children as are operators
         ELSE IF token = "OP" THEN
             right ← node_stack.POP()
             left ← node_stack.POP()
-            node ← NEW ASTNode(token, value, left, right)
+            node ← NEW ASTNODE(token, value, left, right)
             node_stack.PUSH(node)
         ENDIF
     ENDWHILE
@@ -112,8 +115,8 @@ SUBROUTINE PostfixToAST(postfix_queue)
     RETURN node_stack.POP()
 ENDSUBROUTINE
 
-SUBROUTINE EvaluateAST(node, variable_value, variable, use_degrees, inside_trig, needs_converting)
-    // Recursively evaluates AST for a given value along the axis
+SUBROUTINE EVALUATE_AST(node, variable_value, variable, use_degrees, inside_trig, needs_converting)
+    // Recursively evaluates the AST for a given value along the axis
 
     IF node = NULL THEN
         RETURN NULL
@@ -179,29 +182,29 @@ SUBROUTINE EvaluateAST(node, variable_value, variable, use_degrees, inside_trig,
     RETURN NULL
 ENDSUBROUTINE
 
-SUBROUTINE CopyAST(node)
+SUBROUTINE COPY_AST(node)
     // Produces a copy of the AST with the supplied root node
     IF node = NULL THEN
     RETURN NULL
     ENDIF
 
-    RETURN NEW ASTNode(node.TYPE, node.VALUE, CopyAST(node.LEFT), CopyAST(node.RIGHT))
+    RETURN NEW ASTNODE(node.TYPE, node.VALUE, CopyAST(node.LEFT), CopyAST(node.RIGHT))
 ENDSUBROUTINE
 
-SUBROUTINE ContainsTrigFunction(node)
+SUBROUTINE CONTAINS_TRIG_FUNCTION(node)
     // Returns TRUE if AST contains sin, cos, or tan
     IF node = NULL THEN
     RETURN FALSE
     ENDIF
 
-    IF node.TYPE = "FUNCTION" AND node.VALUE IN {"sin", "cos", "tan"} THEN
+    IF node.TYPE = "FUNCTION" AND node.VALUE IS IN {"sin", "cos", "tan"} THEN
         RETURN TRUE
     ENDIF
 
-    RETURN ContainsTrigFunction(node.LEFT) OR ContainsTrigFunction(node.RIGHT)
+    RETURN CONTAINS_TRIG_FUNCTION(node.LEFT) OR CONTAINS_TRIG_FUNCTION(node.RIGHT)
 ENDSUBROUTINE
 
-SUBROUTINE SimplifyAST(node)
+SUBROUTINE SIMPLIFY_AST(node)
     // Recursively simplifies an AST
     // Designed to reduce excess nodes created from differentiation logic
 
@@ -210,11 +213,11 @@ SUBROUTINE SimplifyAST(node)
     ENDIF
 
     // Simplify children first (post-order traversal)
-    node.LEFT ← SimplifyAST(node.LEFT)
-    node.RIGHT ← SimplifyAST(node.RIGHT)
+    node.LEFT ← SIMPLIFY_AST(node.LEFT)
+    node.RIGHT ← SIMPLIFY_AST(node.RIGHT)
 
     // Leaf nodes cannot be simplified
-    IF node.TYPE IN {"NUMBER", "NAME"} THEN
+    IF node.TYPE IS IN {"NUMBER", "NAME"} THEN
         RETURN node
     ENDIF
 
@@ -227,7 +230,7 @@ SUBROUTINE SimplifyAST(node)
         // If the operator is calculable, e.g. 5*3 then return a number node of 15
         // Reduces 3 nodes - OP, Left and Right to 1 node
         IF left.TYPE = "NUMBER" AND right.TYPE = "NUMBER" THEN
-            RETURN NEW ASTNode("NUMBER", CALCULATE(op, left, right))
+            RETURN NEW ASTNODE("NUMBER", CALCULATE(op, left, right))
         ENDIF
 
         // Algebraic simplification, e.g. x*1 = x
@@ -242,12 +245,12 @@ SUBROUTINE SimplifyAST(node)
 
         // 0 - x = -x
         IF op = "-" AND left.VALUE = 0 THEN
-            RETURN NEW ASTNode("OP", "*", NEW ASTNode("NUMBER", "-1"), right)
+            RETURN NEW ASTNODE("OP", "*", NEW ASTNODE("NUMBER", "-1"), right)
         ENDIF
 
         // x * 0
         IF op = "*" AND (left.VALUE = 0 OR right.VALUE = 0) THEN
-            RETURN NEW ASTNode("NUMBER", "0")
+            RETURN NEW ASTNODE("NUMBER", "0")
         ENDIF
 
         // x * 1
@@ -259,19 +262,9 @@ SUBROUTINE SimplifyAST(node)
 
         // x ** 1 or x ** 0
         IF op = "**" AND right.VALUE = 1 THEN RETURN left
-        IF op = "**" AND right.VALUE = 0 THEN RETURN NEW ASTNode("NUMBER", "1")
-
+        IF op = "**" AND right.VALUE = 0 THEN RETURN NEW ASTNODE("NUMBER", "1")
         RETURN node
     ENDIF
 
     RETURN node
-ENDSUBROUTINE
-
-SUBROUTINE PrintAST(node, depth)
-    // Debug subroutine used to output the entire tree
-    IF node = NULL THEN RETURN
-
-    OUTPUT INDENT(depth), node.TYPE, node.VALUE
-    PrintAST(node.LEFT, depth + 1)
-    PrintAST(node.RIGHT, depth + 1)
 ENDSUBROUTINE

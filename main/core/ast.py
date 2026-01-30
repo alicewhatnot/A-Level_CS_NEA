@@ -198,6 +198,22 @@ def containsTrigFunction(node):
         return True
     return containsTrigFunction(node.left) or containsTrigFunction(node.right)
 
+def isNumber(node, value=None):
+    """
+    Returns True if node is a number, and if value is supplied, checks if it matches
+    Used in simplification logic to avoid fatal crashes when checking node values
+    """
+    if node is None:
+        return False
+    if node.type != "NUMBER":
+        return False
+    if value is not None:
+        try:
+            return float(node.value) == float(value)
+        except:
+            return False
+    return True
+
 def simplifyAST(node):
     """
     Recursively simplifies an AST.
@@ -221,9 +237,8 @@ def simplifyAST(node):
         left = node.left
         right = node.right
 
-        # If the operator is calculable, e.g. 5*3 then return a number node of 15
-        # Reduces 3 nodes - OP, Left and Right to 1 node
-        if left and right and left.type == "NUMBER" and right.type == "NUMBER":
+        # Constant folding
+        if isNumber(left) and isNumber(right):
             try:
                 a = float(left.value)
                 b = float(right.value)
@@ -232,72 +247,85 @@ def simplifyAST(node):
                 if op == "*": return ASTNode("NUMBER", str(a * b))
                 if op == "/": return ASTNode("NUMBER", str(a / b))
                 if op == "**": return ASTNode("NUMBER", str(a ** b))
-            
             except Exception:
                 pass
 
-        # Algebraic simplification, e.g. x*1 = x
-        # Reduces 3 nodes - OP, Left and Right to 1 node
-
         # x + 0
         if op == "+":
-            if left.type == "NUMBER" and float(left.value) == 0:
+            if isNumber(left, 0):
                 return right
-            if right.type == "NUMBER" and float(right.value) == 0:
+            if isNumber(right, 0):
                 return left
 
+        # x - 0, 0 - x
         if op == "-":
-            # x - 0
-            if right.type == "NUMBER" and float(right.value) == 0:
+            if isNumber(right, 0):
                 return left
-            
-            # 0 - x = -x
-            if left.type == "NUMBER" and float(left.value) == 0:
+            if isNumber(left, 0):
                 return ASTNode("OP", "*", ASTNode("NUMBER", "-1"), right)
 
-
+        # Multiplication rules
         if op == "*":
-            # x * 0
-            if (left.type == "NUMBER" and float(left.value) == 0) or (right.type == "NUMBER" and float(right.value) == 0):
+            if isNumber(left, 0) or isNumber(right, 0):
                 return ASTNode("NUMBER", "0")
-            
-            # x * 1
-            if left.type == "NUMBER" and float(left.value) == 1:
+            if isNumber(left, 1):
                 return right
-            if right.type == "NUMBER" and float(right.value) == 1:
+            if isNumber(right, 1):
                 return left
-            
-            # x * -1 = -x
-            if right.type == "NUMBER" and float(right.value) == -1:
+            if isNumber(right, -1):
                 return ASTNode("OP", "*", ASTNode("NUMBER", "-1"), left)
 
-
+        # Division rules
         if op == "/":
-            # 0 / x
-            if left.type == "NUMBER" and float(left.value) == 0:
+            if isNumber(left, 0):
                 return ASTNode("NUMBER", "0")
-            
-            # x / 1
-            if right.type == "NUMBER" and float(right.value) == 1:
+            if isNumber(right, 1):
                 return left
 
+        # Power rules
         if op == "**":
-            if right.type == "NUMBER":
-                # x ** 1
-                if float(right.value) == 1:
-                    return left
-                
-                # x ** 0
-                if float(right.value) == 0:
-                    return ASTNode("NUMBER", "1")
+            if isNumber(right, 1):
+                return left
+            if isNumber(right, 0):
+                return ASTNode("NUMBER", "1")
+
+        # Rewrite 1 / u^n → u^-n
+        if op == "/" and isNumber(left, 1):
+            if right is not None and right.type == "OP" and right.value == "**":
+                base = right.left
+                exp = right.right
+                if isNumber(exp):
+                    return ASTNode("OP", "**", base, ASTNode("NUMBER", str(-float(exp.value))))
+
+        # u^a * u^b = u^(a+b)
+        if op == "*":
+            if (
+                left is not None and right is not None and
+                left.type == "OP" and right.type == "OP" and
+                left.value == "**" and right.value == "**" and
+                left.left == right.left and
+                isNumber(left.right) and isNumber(right.right)
+            ):
+                new_exp = float(left.right.value) + float(right.right.value)
+                return ASTNode("OP", "**", left.left, ASTNode("NUMBER", str(new_exp)))
+
+        # (u^a)^b = u^(a*b)
+        if op == "**":
+            if (
+                left is not None and
+                left.type == "OP" and left.value == "**" and
+                isNumber(left.right) and isNumber(right)
+            ):
+                new_exp = float(left.right.value) * float(right.value)
+                return ASTNode("OP", "**", left.left, ASTNode("NUMBER", str(new_exp)))
 
         return node
 
-    # Evaluate functions if possible
+    # Function simplification
     if node.type == "FUNCTION":
         arg = node.left
 
-        if arg and arg.type == "NUMBER":
+        if isNumber(arg):
             try:
                 val = float(arg.value)
                 if node.value == "sin":
@@ -309,36 +337,13 @@ def simplifyAST(node):
             except Exception:
                 pass
 
-        # ln(1) = 0
-        if node.value == "ln" and arg.type == "NUMBER" and float(arg.value) == 1:
+        if node.value == "ln" and isNumber(arg, 1):
             return ASTNode("NUMBER", "0")
 
         return node
-    
-    # Rewriting quotient rule as power rule - less resource intensive
-    if op == "/" and left.type == "NUMBER" and float(left.value) == 1:
-        if right.type == "OP" and right.value == "**":
-            base = right.left
-            exp = right.right
-            if exp.type == "NUMBER":
-                return ASTNode("OP", "**", base, ASTNode("NUMBER", str(-float(exp.value))))
-    
-    # Rewriting the two power rules
-    # u^a * u^b = u^(a+b)
-    if op == "*" and left.type == "OP" and right.type == "OP":
-        if left.value == "**" and right.value == "**":
-            if left.left == right.left:
-                if left.right.type == "NUMBER" and right.right.type == "NUMBER":
-                    new_exp = float(left.right.value) + float(right.right.value)
-                    return ASTNode("OP", "**", left.left, ASTNode("NUMBER", str(new_exp)))
-    
-    # (u^a)^b = u^(a*b)
-    if op == "**" and left.type == "OP" and left.value == "**":
-        if left.right.type == "NUMBER" and right.type == "NUMBER":
-            new_exp = float(left.right.value) * float(right.value)
-            return ASTNode("OP", "**", left.left, ASTNode("NUMBER", str(new_exp)))
 
     return node
+
 
 # Debug subroutine used to output the entire tree
 def printAST(node, depth=0):

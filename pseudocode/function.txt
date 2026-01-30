@@ -1,5 +1,11 @@
 CLASS Function
-    SUBROUTINE Initialise(function_tree, function_variable, function_colour)
+    ATTRIBUTES
+        PRIVATE function_tree : ASTNODE OBJECT
+        PRIVATE function_variable : STRING
+        PRIVATE function_colour : ARRAY OF INTEGER
+    ENDATTRIBUTES
+    
+    CONSTRUCTOR (function_tree, function_variable, function_colour)
         // Store the AST representing the function
         function_tree ← function_tree
 
@@ -8,30 +14,30 @@ CLASS Function
 
         // Store the colour used to draw the function
         function_colour ← function_colour
-    ENDSUBROUTINE
+    ENDCONSTRUCTOR
 
-    SUBROUTINE GetFunction()
+    PUBLIC METHOD GET_FUNCTION()
         // Return the function AST
         RETURN function_tree
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE SetFunction(new_function_tree)
+    PUBLIC METHOD SET_FUNCTION(new_function_tree)
         // Update the function AST
         function_tree ← new_function_tree
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE GetColour()
+    PUBLICMETHOD GET_COLOUR()
         // Return the function colour
         RETURN function_colour
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE SetColour(new_colour)
+    PUBLIC METHOD SET_COLOUR(new_colour)
         // Update the function colour
         function_colour ← new_colour
-    ENDSUBROUTINE
+    ENDMETHOD
 
-    SUBROUTINE GetFunctionVar()
+    PUBLIC METHOD GET_FUNCTION_VAR()
         // Return the function variable
         RETURN function_variable
-    ENDSUBROUTINE
+    ENDMETHOD
 ENDCLASS
