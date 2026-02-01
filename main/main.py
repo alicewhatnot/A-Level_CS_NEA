@@ -16,11 +16,11 @@ pygame.init()
 pygame.key.set_repeat(300, 50)
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Transformation Animator")
-from settings import load_assets
+from settings import loadAssets
 
 # UI Elements & Assets
 
-arrow_img, tick_img = load_assets()
+arrow_img, tick_img = loadAssets()
 
 function_text = Text(20,30, "Enter Function")
 y_text = Text(20,70, "y", font=MATHS_FONT)
@@ -88,6 +88,7 @@ use_degrees = True
 trig = False
 derivative_order = 0
 dual_view = False
+degRadChanged = False
 
 while running:
     # Background & sidebar drawn
@@ -138,6 +139,7 @@ while running:
 
         # Change from using degrees to not or vice versa
         if deg_rad_button.isClicked(event):
+            degRadChanged = True
             use_degrees = not use_degrees
             animation_controller.setUseDegrees(use_degrees)
             if use_degrees:
@@ -145,16 +147,16 @@ while running:
             else:
                 deg_rad_button.text = "Radians"
 
-
         # Submit function
-        if (event.type == pygame.KEYDOWN and function_box.active):
-
+        if (event.type == pygame.KEYDOWN and function_box.active) or degRadChanged:
+            degRadChanged = False
+            
             # Reset error colour 
             function_box.setError(False)
 
             # Text recieved, passed to an object responsible for creating function objects from user input
             user_function_text = function_box.getText()
-            user_function_entry = FunctionEntry(user_function_text) 
+            user_function_entry = FunctionEntry(user_function_text, use_degrees) 
         
             # User input is parsed
             success = user_function_entry.parseFunction()

@@ -104,24 +104,16 @@ def postfixToAST(postfix_queue):
     # The remaining node is the root of the AST
     print ("AST Created")
     return node_stack.pop()
-
-
-def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=False, needs_converting=True):
+def evaluateAST(node, variable_value, variable):
     """
     Recursively evaluates an AST for a given variable value.
-    - `inside_trig`: True if the current node is inside a trig function
-    - `needs_converting`: True if NUMBER leaves should be converted from degrees to radians
     """
-
     if node is None:
         return None
 
     # Numbers
     if node.type == "NUMBER":
-        val = float(node.value)
-        if use_degrees and inside_trig and needs_converting:
-            return math.radians(val)
-        return val
+        return float(node.value)
 
     # Variable
     if node.type == "NAME":
@@ -131,51 +123,46 @@ def evaluateAST(node, variable_value, variable, use_degrees=False, inside_trig=F
 
     # Operators
     if node.type == "OP":
-        # Determine whether children need converting
-        left_needs_converting = needs_converting
-        right_needs_converting = needs_converting
-
-        # Only suppress conversion for NUMBER * NAME or NAME * NUMBER at any depth
-        if inside_trig and node.value in ("*", "/"):
-            if node.left.type == "NUMBER" and node.right.type == "NAME":
-                left_needs_converting = False
-            elif node.left.type == "NAME" and node.right.type == "NUMBER":
-                right_needs_converting = False
-
         # Recursively evaluate left and right
-        left_val = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig, left_needs_converting)
-        right_val = evaluateAST(node.right, variable_value, variable, use_degrees, inside_trig, right_needs_converting)
+        left_val = evaluateAST(node.left, variable_value, variable)
+        right_val = evaluateAST(node.right, variable_value, variable)
 
         if left_val is None or right_val is None:
             return None
 
         try:
-            if node.value == "+": return left_val + right_val
-            if node.value == "-": return left_val - right_val
-            if node.value == "*": return left_val * right_val
-            if node.value == "/": return left_val / right_val
-            if node.value == "**": return left_val ** right_val
+            if node.value == "+":
+                return left_val + right_val
+            if node.value == "-":
+                return left_val - right_val
+            if node.value == "*":
+                return left_val * right_val
+            if node.value == "/":
+                return left_val / right_val
+            if node.value == "**":
+                return left_val ** right_val
         except Exception:
             return None
 
     # Functions
     if node.type == "FUNCTION":
-        # Inside a trig function now
-        arg_val = evaluateAST(node.left, variable_value, variable, use_degrees, inside_trig=True, needs_converting=True)
+        arg_val = evaluateAST(node.left, variable_value, variable)
         if arg_val is None:
             return None
 
         try:
-            if node.value == "sin": return math.sin(arg_val)
-            if node.value == "cos": return math.cos(arg_val)
-            if node.value == "tan": return math.tan(arg_val)
-            if node.value == "ln": return math.log(arg_val)
+            if node.value == "sin":
+                return math.sin(arg_val)
+            if node.value == "cos":
+                return math.cos(arg_val)
+            if node.value == "tan":
+                return math.tan(arg_val)
+            if node.value == "ln":
+                return math.log(arg_val)
         except Exception:
             return None
 
     return None
-
-
 
 def copyAST(node):
     """
@@ -349,7 +336,6 @@ def simplifyAST(node):
 def simplifyTrigPhase(node):
     """
     Simplifies sin((x ± c)/k) into sin(x/k ± c/k) form.
-    Works only for addition or subtraction in the numerator.
     """
     if node is None:
         return None

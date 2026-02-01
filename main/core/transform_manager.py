@@ -1,8 +1,9 @@
-from core.modify_function import ReflectFunction, ShiftFunction, StretchFunction, DifferentiateFunction
+from core.modify_function import ReflectFunction, ShiftFunction, StretchFunction
 from core.queue import Queue
 from core.function import Function 
 from core.transformations_entry import enqueueTransformations
-from core.ast import copyAST, printAST
+from core.ast import copyAST
+import math
 
 class TransformManager:
     """
@@ -23,23 +24,49 @@ class TransformManager:
             x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect
         )
 
-    def applyTransformation(self, transformation, update_base=True):
+    def applyTransformation(self, transformation, progress=1.0, base_function=None):
         """
-        Applies a given transformation to the current function
+        Applies a transformation at a given progress (0..1).
+        If progress == 1, updates current_function.
         """
-        modifier = None
-        if transformation.type == "shift":
-            modifier = ShiftFunction(self.current_function, transformation.axis, transformation.value) # multiply value by time location? so in apply trans pass in time too default 1
-        elif transformation.type == "stretch":
-            modifier = StretchFunction(self.current_function, transformation.axis, transformation.value)
-        elif transformation.type == "reflect":
-            modifier = ReflectFunction(self.current_function, transformation.axis)
+        if base_function is None:
+            base_function = self.current_function
 
-        if modifier:
-            new_func = modifier.ModifyFunction()
-            if update_base:
-                self.current_function = new_func
-            return new_func
+        temp_func = Function(
+            copyAST(base_function.getFunction()),
+            base_function.getFunctionVar(),
+            base_function.getColour()
+        )
+
+        modifier = None
+
+        if transformation.getType() == "shift":
+            value = transformation.getVal() * progress
+            modifier = ShiftFunction(temp_func, transformation.getAxis(), value)
+
+        elif transformation.getType() == "stretch":
+            scale = 1 + (transformation.getVal() - 1) * progress
+            modifier = StretchFunction(temp_func, transformation.getAxis(), scale)
+
+        elif transformation.getType() == "reflect":
+            if progress == 1:
+                modifier = ReflectFunction(temp_func, transformation.getAxis())
+            else:
+                nonlinear = math.sin(progress * math.pi / 2)
+                scale = 1 - 2 * nonlinear
+                axis = "y" if transformation.getAxis() == "x" else "x"
+                modifier = StretchFunction(temp_func, axis, scale)
+
+        if modifier is None:
+            return temp_func
+
+        result = modifier.ModifyFunction()
+
+        if progress == 1:
+            self.current_function = result
+
+        return result
+
 
     def applyAllTransformations(self, graph_plotter):
         """
@@ -60,34 +87,11 @@ class TransformManager:
         return self.current_function
             
     def nextTransformation(self):
-        """
-        Apply the next transformation in the queue and return the new function
-        """
         if self.transformations_queue.isEmpty():
             return None
-        
-        # Get the transformation
+
         transformation = self.transformations_queue.dequeue()
-
-        # Create a copy of the current function to modify
-        ast_copy = copyAST(self.current_function.getFunction())
-        var_copy = self.current_function.getVariable()
-        new_func = Function(ast_copy, var_copy)
-
-        modifier = None
-        # Create an instance of the relevant modifier class 
-        if transformation.getType() == "shift":
-            modifier = ShiftFunction(new_func, transformation.getAxis(), transformation.getVal())
-        elif transformation.getType() == "stretch":
-            modifier = StretchFunction(new_func, transformation.getAxis(), transformation.getVal())
-        elif transformation.getType() == "reflect":
-            modifier = ReflectFunction(new_func, transformation.getAxis())
-
-        if modifier:
-            # Create a new function from the modifier and store as the current function
-            self.current_function = modifier.ModifyFunction()
-            return self.current_function
-        return None
+        return self.applyTransformation(transformation, progress=1.0)
 
     def setBaseFunction(self, new_function):
         """

@@ -29,7 +29,6 @@ def drawLine(screen, colour, points, thickness=4):
         for i in range(1, len(offset_points)):
             pygame.draw.aaline(screen, colour, offset_points[i-1], offset_points[i])
 
-
 class GraphPlotter:
     def __init__(self):
         self.functions = [] 
@@ -120,7 +119,7 @@ class GraphPlotter:
                 # For each x value,
                 x_val = (px - center_x) / scale
                 # The y value is the function evaluated at that x value
-                y_val = evaluateAST(function_tree, x_val, variable, use_degrees=use_degrees)
+                y_val = evaluateAST(function_tree, x_val, variable)
 
                 # Handles discontinuous functions
                 if y_val is None or math.isnan(y_val) or math.isinf(y_val):

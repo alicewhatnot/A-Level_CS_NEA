@@ -64,7 +64,7 @@ UI_FONT_SMALL = pygame.font.SysFont("Arial", 15)
 GRAPH_FONT = pygame.font.SysFont("Arial", 10)
 
 # Load assets
-def load_assets():
+def loadAssets():
     arrow_path = os.path.join(BASE_DIR, "assets", "arrow.svg")
     arrow_img = pygame.image.load(arrow_path).convert_alpha()
     arrow_img = pygame.transform.scale(arrow_img, (20, 20))

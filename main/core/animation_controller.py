@@ -1,9 +1,8 @@
 import pygame
 from core.ast import copyAST
 from core.function import Function
-from core.modify_function import ShiftFunction, StretchFunction, ReflectFunction, DifferentiateFunction
+from core.modify_function import DifferentiateFunction
 from core.queue import Queue
-import math
 
 class AnimationController:
     def __init__(self, graph_plotter, duration=1000, gap=500):
@@ -25,7 +24,6 @@ class AnimationController:
         self.use_degrees =  True      
         self.paused = False
         self.pending_pause = False
-        self.xshifting = False
 
     def setUseDegrees(self, flag):
             self.use_degrees = flag
@@ -132,12 +130,23 @@ class AnimationController:
         # Make sure the progress doesn't leave 0-1
         progress_safe = max(0.0, min(progress, 1.0))
 
+        if self.use_degrees and self.transformation.getType() == "shift" and self.transformation.getAxis() == 'x':
+            self.transformation.convertToRad()
+            
         # Animates shifts stretches and reflections 
-        intermediate_function = self.applyIntermediateTransformation(self.base_function, self.transformation, progress_safe)
+        intermediate_function = self.transform_manager.applyTransformation(
+            self.transformation,
+            progress_safe,
+            base_function=self.base_function
+        )
 
         if progress >= 1.0:
             # Finish this transformation
-            self.current_function = intermediate_function
+            self.current_function = self.transform_manager.applyTransformation(
+                self.transformation,
+                1.0,
+                base_function=self.base_function
+            )
 
             # Start gap 
             self.in_gap = True
@@ -153,41 +162,6 @@ class AnimationController:
         # Draw intermediate frame of gray original and intermediate animated function
         self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees)
         self.graph_plotter.drawFunction(screen, intermediate_function, use_degrees=self.use_degrees)
-
-    def applyIntermediateTransformation(self, base_function, transformation, progress):
-        # Calculates the intermediate functions from original -> transformed
-        # Shift and stretch are simple linear animations, reflect uses non-linear animating
-        if transformation.getType() == "shift":
-            # Copies and modifies the original function by the transformation amount scaled by progress
-            intermediate_value = progress * transformation.getVal()
-            modifier = ShiftFunction(Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour()),transformation.getAxis(), intermediate_value)
-
-        elif transformation.getType() == "stretch":
-            # Copies and modifies the original function by the transformation amount scaled by progress
-            intermediate_value = 1 + (transformation.getVal() - 1) * progress
-            modifier = StretchFunction(Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour()),transformation.getAxis(), intermediate_value)
-            if transformation.getAxis() == "x":
-                self.xshifting = True
-        elif transformation.getType() == "reflect":
-            # Nonlinear as an attempt to distinguish a reflect from a scale of -1
-            nonlinear_progress = math.sin(progress * math.pi / 2)
-            scale = (1 - 2 * nonlinear_progress)
-            
-            temp_func = Function(copyAST(base_function.getFunction()), base_function.getFunctionVar(), base_function.getColour())
-
-            # Uses stretch during the animation to stretch from 1 -> -1
-            if transformation.getAxis() == 'x':
-                modifier = StretchFunction(temp_func, 'y', scale)
-            else:  # 'y'
-                if self.xshifting:
-                    scale = scale*360/(2*math.pi)
-                modifier = StretchFunction(temp_func, 'x', scale)
-        else:
-            # If no transformation found just return the function
-            return Function(copyAST(base_function.getFunction()), base_function.getFunctionVar())
-
-        # Apply modifier
-        return modifier.ModifyFunction()
 
     # Specific method for differentiating
     def differentiate(self):

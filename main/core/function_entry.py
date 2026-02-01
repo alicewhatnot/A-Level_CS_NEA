@@ -2,17 +2,18 @@ from core.parser import parse
 from core.ast import postfix, postfixToAST
 
 class FunctionEntry:
-    def __init__(self, user_input: str):
+    def __init__(self, user_input, convert):
         self.user_input = user_input
         self.tokens = []
         self.variable = ""
         self.ast = None
+        self.convert = convert
 
     def parseFunction(self):
         """
         Tokenise the user input string
         """
-        self.tokens, self.variable = parse(self.user_input)
+        self.tokens, self.variable = parse(self.user_input, self.convert)
         if not self.tokens:
             return False  
         return True

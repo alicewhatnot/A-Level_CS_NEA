@@ -41,7 +41,6 @@ def drawGraphArea(screen, derivative_order=1, dual_view=False, variable="x", fon
         # Draw X-axis numbers
         if trig:
             # Draw the degrees axis
-            # Converts from radians as the same is done on the graphing end, the actual graph is in radians
             step_radians = math.pi / 2
             num_steps = (width // scale) // 2
             for index in range(-num_steps, num_steps - 4):

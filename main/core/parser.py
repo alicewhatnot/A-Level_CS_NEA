@@ -1,4 +1,5 @@
 import re
+import math
 
 def tokenize(expression):
     """
@@ -80,7 +81,17 @@ def tokenize(expression):
                             index += 1 + len(func_str)
                             matched = True
                             break
-                        
+
+                        # Look ahead for a parenthesis (like -(x+1))
+                        paren_match = patterns["LEFTPARENTHESIS"].match(expression, index + 1)
+                        if paren_match:
+                            tokens.append(("LEFTPARENTHESIS", "("))
+                            tokens.append(("NUMBER", "0"))
+                            tokens.append(("OP", "-"))
+                            index += 1
+                            matched = True
+                            break
+
                 # Normal case
                 tokens.append((token, characters))
                 index += len(characters)
@@ -191,7 +202,40 @@ def validateTokens(tokens):
 
     return True, variable
 
-def parse(expression):
+def convertXShiftsToRadians(tokens, x_variable="x"):
+    """
+    Converts any numeric constants added/subtracted to x into radians.
+    """
+    new_tokens = []
+    i = 0
+    while i < len(tokens):
+        tok_type, tok_val = tokens[i]
+
+        # Look for x followed by + or - then a NUMBER
+        if tok_type == "NAME" and tok_val == x_variable:
+            if i + 2 < len(tokens):
+                next_tok_type, next_tok_val = tokens[i + 1]
+                next2_tok_type, next2_tok_val = tokens[i + 2]
+
+                if next_tok_type == "OP" and next_tok_val in ("+", "-") and next2_tok_type == "NUMBER":
+                    # Keep x
+                    new_tokens.append((tok_type, tok_val))
+                    # Keep + or -
+                    new_tokens.append((next_tok_type, next_tok_val))
+                    # Convert number to radians
+                    rad_val = str(float(next2_tok_val) * math.pi / 180)
+                    new_tokens.append(("NUMBER", rad_val))
+                    # Skip the next two tokens since we already processed them
+                    i += 3
+                    continue
+
+        # Normal case, just copy the token
+        new_tokens.append((tok_type, tok_val))
+        i += 1
+
+    return new_tokens
+
+def parse(expression, convert):
     """
     Brings together the three subroutines involved in parsing the expression
     """
@@ -209,6 +253,9 @@ def parse(expression):
     if not valid:
         print ("Invalid Tokens")
         return [], None
+    
+    if convert: 
+        tokens = convertXShiftsToRadians(tokens)
 
     print ("Returning Valid Tokens")
     
