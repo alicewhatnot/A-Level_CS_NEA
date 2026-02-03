@@ -43,7 +43,7 @@ SUBROUTINE shiftX(node, shift)
         RETURN NULL
 
     ELSE IF node.type = "NAME" THEN
-        shift_amount ← NEW ASTNode("NUMBER", shift AS STRING, NULL, NULL)
+        shift_amount ← NEW ASTNode("NUMBER", shift, NULL, NULL)
         RETURN NEW ASTNode("OP", "-", node, shift_amount)
 
     ELSE
@@ -67,7 +67,7 @@ SUBROUTINE shiftY(node, shift)
         RETURN NULL
     ENDIF
 
-    shift_amount ← NEW ASTNode("NUMBER", shift AS STRING, NULL, NULL)
+    shift_amount ← NEW ASTNode("NUMBER", shift, NULL, NULL)
     RETURN NEW ASTNode("OP", "+", node, shift_amount)
 ENDSUBROUTINE
 
@@ -79,7 +79,7 @@ SUBROUTINE stretchX(node, stretch)
         RETURN NULL
 
     ELSE IF node.type = "NAME" THEN
-        factor ← NEW ASTNode("NUMBER", stretch AS STRING, NULL, NULL)
+        factor ← NEW ASTNode("NUMBER", stretch, NULL, NULL)
         RETURN NEW ASTNode("OP", "/", node, factor)
 
     ELSE
@@ -98,11 +98,11 @@ ENDSUBROUTINE
 SUBROUTINE stretchY(node, stretch)
     // Stretches the function along the Y-axis
     // Implemented by multiplying the entire expression by the stretch factor
-
+    
     IF node = NULL THEN
         RETURN NULL
     ENDIF
 
-    factor ← NEW ASTNode("NUMBER", stretch AS STRING, NULL, NULL)
+    factor ← NEW ASTNode("NUMBER", stretch, NULL, NULL)
     RETURN NEW ASTNode("OP", "*", factor, node)
 ENDSUBROUTINE
