@@ -38,10 +38,6 @@ CLASS TRASNFORM_MANAGER
         ELSE IF transformation.TYPE = "reflect" THEN
             new_function ← NEW REFLECT_FUNCTION(current_function, transformation.axis)
 
-        ELSE IF transformation.TYPE = "differentiate" THEN
-            new_function ← NEW DIFFERENTIATE_FUNCTION(current_function)
-        ENDIF
-
         IF new_function <> NULL THEN
             RETURN new_function
         ENDIF
