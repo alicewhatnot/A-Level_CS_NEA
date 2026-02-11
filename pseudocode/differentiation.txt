@@ -54,7 +54,24 @@ SUBROUTINE DIFFERENTIATE(node)
             ELSE
                 RETURN NULL
             ENDIF
+        ELSE IF operator = "/" THEN
+        // Implements the quotient rule (d/dx[u/v] = (v u' − u v') / v²)
+            top ← node.LEFT
+            bottom ← node.RIGHT
+
+            top_differentiated ← DIFFERENTIATE(top)
+            bottom_differentiated ← DIFFERENTIATE(bottom)
+
+            numerator_left ← NEW ASTNODE("OP", "*", bottom, top_differentiated)
+            numerator_right ← NEW ASTNODE("OP", "*", top, bottom_differentiated)
+            numerator ← NEW ASTNODE("OP", "-", numerator_left, numerator_right)
+
+            denominator_power ← NEW ASTNODE("NUMBER", "2", NULL, NULL)
+            denominator ← NEW ASTNODE("OP", "**", bottom, denominator_power)
+
+            RETURN NEW ASTNODE("OP", "/", numerator, denominator)
         ENDIF
+
     
     // differentiates a function using the chain rule (d/dx[f(g)] = f'g')
     ELSE IF node.TYPE = "FUNCTION" THEN
@@ -92,4 +109,4 @@ SUBROUTINE DIFFERENTIATE(node)
 
     // Safety catch if the node cannot be differentiated
     RETURN NULL
-ENDSUBROUTINE
+ENDSUBROUTINE   

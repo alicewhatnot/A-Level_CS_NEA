@@ -239,41 +239,6 @@ CLASS ANIMATION_CONTROLLER
         )
     ENDMETHOD
 
-    PUBLIC METHOD APPLY_TRANSFORMATION(base_function, transformation, progress)
-        // Calculates the intermediate functions from original → transformed
-        // Shift and stretch are simple linear animations, reflect uses non-linear animating
-
-        IF transformation.TYPE = "shift" THEN
-            // Copies and modifies the original function by the transformation amount scaled by progress
-            value ← progress * transformation.VALUE
-            RETURN Shift(base_function, transformation.AXIS, value)
-
-        ELSE IF transformation.TYPE = "stretch" THEN
-            // Copies and modifies the original function by the transformation amount scaled by progress
-            value ← 1 + (transformation.VALUE − 1) * progress
-            RETURN Stretch(base_function, transformation.AXIS, value)
-
-        ELSE IF transformation.TYPE = "reflect" THEN
-            // Nonlinear as an attempt to distinguish a reflect from a scale of −1
-            nonlinear ← SIN(progress * π / 2)
-            scale ← 1 − 2 * nonlinear
-
-            IF progress < 1 THEN
-                // Uses stretch during the animation to stretch from 1 → −1
-                IF transformation.AXIS = "x" THEN
-                    RETURN Stretch(base_function, "y", scale)
-                ELSE
-                    RETURN Stretch(base_function, "x", scale)
-                ENDIF
-            ELSE
-                RETURN Reflect(base_function, transformation.AXIS)
-            ENDIF
-        ENDIF
-
-        // If no transformation found just return the function
-        RETURN COPY(base_function)
-    ENDMETHOD
-
     PUBLIC METHOD DIFFERENTIATE()
         // Specific method for differentiating
         IF transform_manager = NULL THEN

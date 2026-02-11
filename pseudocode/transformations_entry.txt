@@ -1,11 +1,11 @@
-SUBROUTINE validTransformation(value, type)
+SUBROUTINE VALID_TRANSFORMATION(value, type)
     // Performs validation on user input depending on transformation type
     // Uses tokenizer logic from the main parser
 
     contains_name ← FALSE
 
     // Only parse value if transformation is not reflect
-    IF type ≠ "reflect" THEN
+    IF type <> "reflect" THEN
         tokens ← tokenize(value)
 
         // If tokenisation fails, transformation is invalid
