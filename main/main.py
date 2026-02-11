@@ -7,6 +7,7 @@ import random
 from core.ast import containsTrigFunction
 import pygame
 import sys
+import time
 
 from settings import WIDTH, HEIGHT, SIDEBAR_WIDTH, FPS, MATHS_FONT, COLOUR_BACKGROUND, COLOUR_SIDEBAR, FUNCTION_COLOURS
 from ui_elements import InputBox, Checkbox, Button, Text, PlayPauseButton
@@ -225,7 +226,9 @@ while running:
         # Differentiate
         if differentiate_button.isClicked(event) and function_entered and current_tab == "differentiation":
             # Special case of animation controller in which no animation occurs
+            print (f"Deriving! Time is: {time.time()}")
             success = animation_controller.differentiate()
+            print (f"Finished! Time is: {time.time()}")
 
             # Then order increased to 1 for representation on the graph axis            
             if success:
@@ -273,8 +276,10 @@ while running:
             animation_controller.current_function = current_displayed_function
             animation_controller.transformation = None
 
+    # Advance the clock 
     # update function input box for cursor blink
-    function_box.update(clock.tick(FPS))
+    dt = clock.tick(FPS)
+    function_box.update(dt)
 
     # Getting the mouse position and passing to buttons for a hover effect
     mouse_pos = pygame.mouse.get_pos()
@@ -334,8 +339,8 @@ while running:
 
 
     pygame.display.flip()
-    # Main loop repeats FPS times per second
-    clock.tick(FPS)
+
+    print (f"{current_tab} and time is {time.time()}")
 
 pygame.quit()
 sys.exit()

@@ -24,29 +24,46 @@ CLASS TRASNFORM_MANAGER
         transformations_queue.ENQUEUE(Y_reflect)
     ENDMETHOD
 
-    PUBLIC METHOD APPLY_TRANSFORMATION(transformation)
-        // Applies a single transformation to the current function
+    PUBLIC METHOD APPLY_TRANSFORMATION(transformation, progress=1.0, base_function=NULL)
+        // Applies a single transformation at a given progress (0..1)
+        IF base_function = NULL THEN
+            base_function ← current_function
+        ENDIF
 
-        new_function ← NULL
+        temp_function ← COPY_FUNCTION(base_function)
+
+        modifier ← NULL
 
         IF transformation.TYPE = "shift" THEN
-            new_function ← NEW SHIFT_FUNCTION(current_function, transformation.axis, transformation.value)
+            value ← transformation.VALUE * progress
+            modifier ← NEW SHIFT_FUNCTION(temp_function, transformation.AXIS, value)
 
         ELSE IF transformation.TYPE = "stretch" THEN
-            new_function ← NEW STRETCH_FUNCTION(current_function, transformation.axis, transformation.value)
+            scale ← 1 + (transformation.VALUE - 1) * progress
+            modifier ← NEW STRETCH_FUNCTION(temp_function, transformation.AXIS, scale)
 
         ELSE IF transformation.TYPE = "reflect" THEN
-            new_function ← NEW REFLECT_FUNCTION(current_function, transformation.axis)
-
-        ELSE IF transformation.TYPE = "differentiate" THEN
-            new_function ← NEW DIFFERENTIATE_FUNCTION(current_function)
+            IF progress = 1 THEN
+                modifier ← NEW REFLECT_FUNCTION(temp_function, transformation.AXIS)
+            ELSE
+                nonlinear ← SIN(progress * PI / 2)
+                scale ← 1 - 2 * nonlinear
+                axis ← IF transformation.AXIS = "x" THEN "y" ELSE "x"
+                modifier ← NEW STRETCH_FUNCTION(temp_function, axis, scale)
+            ENDIF
         ENDIF
 
-        IF new_function <> NULL THEN
-            RETURN new_function
+        IF modifier = NULL THEN
+            RETURN temp_function
         ENDIF
 
-        RETURN NULL
+        result ← modifier.MODIFY_FUNCTION()
+
+        IF progress = 1 THEN
+            current_function ← result
+        ENDIF
+
+        RETURN result
     ENDMETHOD
 
     PUBLIC METHOD APPLY_ALL_TRANSFORMATIONS(graph_plotter)

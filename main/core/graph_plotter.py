@@ -1,5 +1,6 @@
 import pygame
 import math
+import time
 from settings import WIDTH, HEIGHT
 from core.ast import evaluateAST   
 from settings import SIDEBAR_WIDTH, LINE_THICKNESS, GRAPH_SCALE
@@ -44,6 +45,7 @@ class GraphPlotter:
         """
         Clears old graph and plots only the new user function
         """
+        print (f"Plotting Function, Time is: {time.time()}")
         self.functions = [function_object]
 
     def plotSubsequent(self, function_object):

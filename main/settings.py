@@ -40,7 +40,7 @@ COLOUR_BACKGROUND = (255, 255, 255)
 COLOUR_SIDEBAR = (230, 230, 230)
 
 # Frame rate
-FPS = 60
+FPS = 30
 
 # Base dir
 if getattr(sys, 'frozen', False):

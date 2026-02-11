@@ -1,6 +1,6 @@
 import re
 import math
-
+import time
 def tokenize(expression):
     """
     Returns a two dimensional array of all characters in the expression and their associated token
@@ -209,28 +209,28 @@ def convertXShiftsToRadians(tokens, x_variable="x"):
     new_tokens = []
     i = 0
     while i < len(tokens):
-        tok_type, tok_val = tokens[i]
+        token_type, token_value = tokens[i]
 
         # Look for x followed by + or - then a NUMBER
-        if tok_type == "NAME" and tok_val == x_variable:
+        if token_type == "NAME" and token_value == x_variable:
             if i + 2 < len(tokens):
-                next_tok_type, next_tok_val = tokens[i + 1]
-                next2_tok_type, next2_tok_val = tokens[i + 2]
+                next_token_type, next_token_value = tokens[i + 1]
+                next2_token_type, next2_token_value = tokens[i + 2]
 
-                if next_tok_type == "OP" and next_tok_val in ("+", "-") and next2_tok_type == "NUMBER":
+                if next_token_type == "OP" and next_token_value in ("+", "-") and next2_token_type == "NUMBER":
                     # Keep x
-                    new_tokens.append((tok_type, tok_val))
+                    new_tokens.append((token_type, token_value))
                     # Keep + or -
-                    new_tokens.append((next_tok_type, next_tok_val))
+                    new_tokens.append((next_token_type, next_token_value))
                     # Convert number to radians
-                    rad_val = str(float(next2_tok_val) * math.pi / 180)
+                    rad_val = str(float(next2_token_value) * math.pi / 180)
                     new_tokens.append(("NUMBER", rad_val))
                     # Skip the next two tokens since we already processed them
                     i += 3
                     continue
 
         # Normal case, just copy the token
-        new_tokens.append((tok_type, tok_val))
+        new_tokens.append((token_type, token_value))
         i += 1
 
     return new_tokens
@@ -240,6 +240,7 @@ def parse(expression, convert):
     Brings together the three subroutines involved in parsing the expression
     """
     tokens = tokenize(expression)
+    print (f"Time at user entry: {time.time()}")
     print ("Expression Tokenized")
 
     if not tokens:

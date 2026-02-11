@@ -32,7 +32,7 @@ class DifferentiateFunction(ModifyFunction):
                 break
             simplified = next_simplified
 
-        printAST(simplified)
+        # printAST(simplified)
         self.altered_function.setFunction(simplified)
         return self.altered_function
 

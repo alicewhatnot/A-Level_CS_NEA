@@ -1,6 +1,7 @@
 from core.queue import Queue
 from core.stack import Stack
 import math
+import time
 
 class ASTNode:
     def __init__(self, node_type, value=None, left=None, right=None):
@@ -104,10 +105,12 @@ def postfixToAST(postfix_queue):
     # The remaining node is the root of the AST
     print ("AST Created")
     return node_stack.pop()
+
 def evaluateAST(node, variable_value, variable):
     """
     Recursively evaluates an AST for a given variable value.
     """
+
     if node is None:
         return None
 
