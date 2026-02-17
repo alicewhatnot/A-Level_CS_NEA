@@ -752,8 +752,365 @@ class Stack:
         # Returns the number of items in the stack
         return self.top_index
 
-expression = "a+3b"
+
+class Transformation:
+    """
+    Transformation class, created at runtime for each transformation.
+    Stores all information needed to apply the transformation.
+    """
+    def __init__(self, transform_type, transform_value=None, transform_axis=None, ):
+        self.type = transform_type            # "shift", "stretch", "reflect", "differentiate", etc.
+        self.value = transform_value          # numeric value (for shift/stretch)
+        self.axis = transform_axis            # "x" or "y" (if applicable)
+        self.converted = False
+
+    def getVal(self):
+        return self.value
+    
+    def convertToRad(self):
+        # To convert the x shift to radians if the user has entered it in degrees
+        if not self.converted: # Avoids converting more than once
+            self.value = self.value * math.pi / 180
+            self.converted = True
+    
+    def getType(self):
+        return self.type
+
+    def getAxis(self):
+        return self.axis
+    
+def enqueueTransformations(x_stretch_box, y_stretch_box, x_shift_box, y_shift_box, x_reflect, y_reflect):
+    """
+    Enqueues the transformations that are valid
+    """
+    transformations_queue = Queue(6)
+
+    # Read values from input boxes
+    stretchX_value = x_stretch_box
+    stretchY_value = y_stretch_box
+    shiftX_value = x_shift_box
+    shiftY_value = y_shift_box
+    reflectX_bool = x_reflect
+    reflectY_bool = y_reflect
+
+    # X-axis
+    if validTransformation(stretchX_value, "stretch"):
+        transformations_queue.enqueue(Transformation("stretch", eval(stretchX_value.replace("^", "**")), 'x'))
+    if validTransformation(reflectX_bool, "reflect"):
+        transformations_queue.enqueue(Transformation("reflect", reflectX_bool, 'x'))
+    if validTransformation(shiftX_value, "shift"):
+        transformations_queue.enqueue(Transformation("shift", eval(shiftX_value.replace("^", "**")), 'x'))
+
+    # Y-axis
+    if validTransformation(stretchY_value, "stretch"):
+        transformations_queue.enqueue(Transformation("stretch", eval(stretchY_value.replace("^", "**")), 'y'))
+    if validTransformation(reflectY_bool, "reflect"):
+        transformations_queue.enqueue(Transformation("reflect", reflectY_bool, 'y'))
+    if validTransformation(shiftY_value, "shift"):
+        transformations_queue.enqueue(Transformation("shift", eval(shiftY_value.replace("^", "**")), 'y'))
+
+    return transformations_queue
+
+   
+def validTransformation(value, type):
+    """
+    Performs validation on the user input depending on the type of transformation
+    Utilises the tokenizer from the main function parser
+    """
+    contains_name = False
+    
+    # Only parses value if not boolean
+    if type != "reflect":
+        tokens = tokenize(value) 
+        
+        # Only check tokens if they exist
+        if tokens == None:
+            return False
+
+        # If NAME pattern in value, will be rejected
+        for token in tokens:
+            if token[0] == "NAME":
+                contains_name = True
+                return False
+            
+   # Checking if the value is none
+    if value == "":
+        return False
+    
+    # Checking if the value is default, if so the transformation should be skipped
+    try:
+        if not contains_name:
+            if type == "shift" and eval(value) == 0:
+                return False
+            elif type == "stretch" and eval(value) == 1:
+                return False
+            elif type == "reflect" and value is False:
+                return False
+            
+            # Checking if stretching by scale factor 0
+            elif type == "stretch" and eval(value) == 0:
+                return False
+            else:
+                return True
+    except:
+        return False
+    return False
+
+
+def reflectXAxis(node):
+    """
+    Reflects the function across the X-axis by multiplying the whole expression by -1
+    """
+    if node is None:
+        return None
+    # print("\nOriginal Node:")
+    # printAST(node)
+    negative_one = ASTNode("NUMBER", "-1", None, None)
+    newNode = ASTNode("OP", "*", negative_one, node)
+    # print("After reflection across X-axis:")
+    # printAST(newNode)
+    return newNode
+
+
+def reflectYAxis(node):
+    """
+    Reflects the function across the Y-axis by multiplying variables by -1
+    """
+    if node is None:
+        return None
+    # print("\nOriginal Node:")
+    # printAST(node)
+    
+    # Only reflect actual variables, not functions
+    if node.type == "NAME":
+        negative_one = ASTNode("NUMBER", "-1", None, None)
+        newNode = ASTNode("OP", "*", negative_one, node)
+        # print("Reflected variable across Y-axis:")
+        # printAST(newNode)
+        return newNode
+    elif node.type == "FUNCTION":
+        # Reflect inside the function argument
+        node.left = reflectYAxis(node.left)
+    else:
+        # Recursively reflect left and right for operators
+        if node.left:
+            node.left = reflectYAxis(node.left)
+        if node.right:
+            node.right = reflectYAxis(node.right)
+    # print("Node after reflection across Y-axis:")
+    # printAST(node)
+    return node
+
+
+def shiftX(node, shift):
+    """
+    Shifts the function along the X-axis by subtracting the shift value 
+    """
+    if node is None:
+        return None
+    # print("\nOriginal Node:")
+    # printAST(node)
+
+    if node.type == "NAME":
+        shift_amount = ASTNode("NUMBER", str(shift), None, None)
+        newNode = ASTNode("OP", "-", node, shift_amount)
+        # print("Shifted variable along X-axis:")
+        # printAST(newNode)
+        return newNode
+    elif node.type == "FUNCTION":
+        node.left = shiftX(node.left, shift)
+    else:
+        if node.left:
+            node.left = shiftX(node.left, shift)
+        if node.right:
+            node.right = shiftX(node.right, shift)
+    # print("Node after X-axis shift:")
+    # printAST(node)
+    return node
+
+
+def shiftY(node, shift):
+    """
+    Shifts the function along the Y-axis by adding the shift value to the expression
+    """
+    if node is None:
+        return None
+    # print("\nOriginal Node:")
+    # printAST(node)
+    
+    shift_amount = ASTNode("NUMBER", str(shift), None, None)
+    newNode = ASTNode("OP", "+", node, shift_amount)
+    # print("Node after Y-axis shift:")
+    # printAST(newNode)
+    return newNode
+
+
+def stretchX(node, stretch):
+    """
+    Stretches the function along the X-axis by dividing variables by the stretch
+    """
+    if node is None:
+        return None
+    # print("\nOriginal Node:")
+    # printAST(node)
+
+    if node.type == "NAME":
+        factor = ASTNode("NUMBER", str(stretch), None, None)
+        newNode = ASTNode("OP", "/", node, factor)
+        # print("Stretched variable along X-axis:")
+        # printAST(newNode)
+        return newNode
+    elif node.type == "FUNCTION":
+        node.left = stretchX(node.left, stretch)
+    else:
+        if node.left:
+            node.left = stretchX(node.left, stretch)
+        if node.right:
+            node.right = stretchX(node.right, stretch)
+    # print("Node after X-axis stretch:")
+    # printAST(node)
+    return node
+
+
+def stretchY(node, stretch):
+    """
+    Stretches the function along the Y-axis by multiplying the whole expression by the stretch
+    """
+    if node is None:
+        return None
+    # print("\nOriginal Node:")
+    # printAST(node)
+    
+    factor = ASTNode("NUMBER", str(stretch), None, None)
+    newNode = ASTNode("OP", "*", factor, node)
+    # print("Node after Y-axis stretch:")
+    # printAST(newNode)
+    return newNode
+
+def differentiate(node):
+    """
+    Recursively differentiates a node and its relevant children
+    """
+    if node is None:
+        return None
+
+    # Returns the derivative of a number which is 0
+    elif node.type == "NUMBER":
+        return ASTNode("NUMBER", "0", None, None)
+
+    # Returns the derivative of a single variable which is 1
+    elif node.type == "NAME":
+        return ASTNode("NUMBER", "1", None, None)
+
+    elif node.type == "OP":
+        operator = node.value
+
+        # Differentiates left and right of the operator, using the rule d/dx[f ± g] = f' ± g'
+        if operator == "+" or operator == "-":
+            left_differentiated = differentiate(node.left)
+            right_differentiated = differentiate(node.right)
+            return ASTNode("OP", operator, left_differentiated, right_differentiated)
+
+        elif operator == "*":
+            # Implements the product rule (d/dx[fg] = f'g + fg') to differentiate left * right
+            left = node.left
+            right = node.right
+            left_differentiated = differentiate(left)
+            right_differentiated = differentiate(right)
+            term1 = ASTNode("OP", "*", left_differentiated, right)
+            term2 = ASTNode("OP", "*", right_differentiated, left)
+            return ASTNode("OP", "+", term1, term2)
+
+        elif operator == "**":
+                    
+            # Implements the power rule (d/dx[u^n] = n * u^(n-1) * u') to differentiate a base to a numerical exponent
+            base = node.left
+            exponent = node.right
+            if exponent.type == "NUMBER":
+                try:
+                    new_exponent_value = str(int(exponent.value) - 1)
+                except ValueError:
+                    return None
+                new_exponent = ASTNode("NUMBER", new_exponent_value, None, None)
+                base_differentiated = differentiate(base)
+                value_to_power = ASTNode("OP", "**", base, new_exponent)
+                coefficient = ASTNode("NUMBER", exponent.value, None, None)
+                product = ASTNode("OP", "*", coefficient, value_to_power)
+                return ASTNode("OP", "*", product, base_differentiated)
+            
+            elif exponent.type == "NAME" and base.type == "NUMBER":
+                # Implements the rule d/dx[a^x] = a^x * ln(a) to differentiate a numerical base to a variable exponent
+                # logarithms are not implemented in the parser as they are out of the scope of the project however implementation for this rule alone is simple as is not user facing
+                ln_base = ASTNode("FUNCTION", "ln", ASTNode("NUMBER", base.value, None, None), None)
+                value_to_power = ASTNode("OP", "**", ASTNode("NUMBER", base.value, None, None), exponent)
+                return ASTNode("OP", "*", value_to_power, ln_base)
+            
+            else:
+                return None
+        
+        # Implements the rule d/dx[u/v] = (vdu - udv) / v^2 to differentiate a numerical base to a variable exponent
+        elif operator == "/":
+            top = node.left
+            bottom = node.right
+            dtop = differentiate(top)
+            dbottom = differentiate(bottom)
+
+            numerator = ASTNode(
+                "OP", "-",
+                ASTNode("OP", "*", bottom, dtop),
+                ASTNode("OP", "*", top, dbottom)
+            )
+            denominator = ASTNode("OP", "**", bottom, ASTNode("NUMBER", "2", None, None))
+            return ASTNode("OP", "/", numerator, denominator)
+        
+
+    # Differentiates a function using the chain rule (d/dx[f(g)] = f'g')
+    elif node.type == "FUNCTION":
+        # if argument is a constant number, derivative is 0
+        # implemented for further derivatives of exponential functions
+        if node.left.type == "NUMBER":
+            return ASTNode("NUMBER", "0", None, None)
+    
+        function = node.value
+        argument = node.left
+        argument_differentiated = differentiate(argument)
+
+        # Uses the chain rule for the cases of sin and cos 
+        if function == "sin":
+            cos_node = ASTNode("FUNCTION", "cos", argument, None)
+            return ASTNode("OP", "*", cos_node, argument_differentiated)
+        elif function == "cos":
+            sin_node = ASTNode("FUNCTION", "sin", argument, None)
+            negative = ASTNode("NUMBER", "-1", None, None)
+            negative_sin = ASTNode("OP", "*", sin_node, negative)
+            return ASTNode("OP", "*", negative_sin, argument_differentiated)
+        
+        # Also using chain rule for tan
+        elif function == "tan":
+            cos_node = ASTNode("FUNCTION", "cos", argument, None)
+            cos_squared = ASTNode("OP", "*", cos_node, cos_node)
+            reciprocal = ASTNode("OP", "/", ASTNode("NUMBER", "1"), cos_squared)
+            return ASTNode("OP", "*", reciprocal, argument_differentiated)
+
+
+    # Safety catch if the node cannot be differentiated
+    return None
+
+# Expression list
+# 7
+# x
+# x^3+sin(x)
+# (x^2)(sin(x))
+# (3x+1)^5
+# sin(3x+2)
+
+expression = "(3x+1)^5+(3x^6-1)(sin(x-1))"
 tokens, variable = parse(expression)
 postfix_queue = postfix(tokens)
 ast = postfixToAST(postfix_queue)
+ast = differentiate(ast) 
+print ("--------------------------------------PRE--------------------------------------")
+printAST(ast)
+ast = simplifyAST(ast)
+print("--------------------------------------POST--------------------------------------")
 printAST(ast)
