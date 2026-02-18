@@ -40,57 +40,7 @@ def tokenize(expression):
                 if token == "OP" and characters == "-":
                     # Unary minus if at start or after another operator or after '('
                     if len(tokens) == 0 or tokens[-1][0] in ("OP", "LEFTPARENTHESIS"):
-                        # Look ahead for a number
-                        num_match = patterns["NUMBER"].match(expression, index + 1)
-                        if num_match:
-                            num_str = num_match.group(0)
-                            # Insert tokens for (0 - num)
-                            tokens.append(("LEFTPARENTHESIS", "("))
-                            tokens.append(("NUMBER", "0"))
-                            tokens.append(("OP", "-"))
-                            tokens.append(("NUMBER", num_str))
-                            tokens.append(("RIGHTPARENTHESIS", ")"))
-
-                            index += 1 + len(num_str)
-                            matched = True
-                            break
-                        
-                        # Look ahead for a variable
-                        name_match = patterns["NAME"].match(expression, index + 1)
-                        if name_match:
-                            var_str = name_match.group(0)
-                            # Insert tokens for (0 - var)
-                            tokens.append(("LEFTPARENTHESIS", "("))
-                            tokens.append(("NUMBER", "0"))
-                            tokens.append(("OP", "-"))
-                            tokens.append(("NAME", var_str))
-                            tokens.append(("RIGHTPARENTHESIS", ")"))
-
-                            index += 1 + len(var_str)
-                            matched = True
-                            break
-
-                        # Look ahead for a function (like -sin(...))
-                        func_match = patterns["FUNCTION"].match(expression, index + 1)
-                        if func_match:
-                            func_str = func_match.group(0)
-                            tokens.append(("LEFTPARENTHESIS", "("))
-                            tokens.append(("NUMBER", "0"))
-                            tokens.append(("OP", "-"))
-                            tokens.append(("FUNCTION", func_str))
-                            index += 1 + len(func_str)
-                            matched = True
-                            break
-
-                        # Look ahead for a parenthesis (like -(x+1))
-                        paren_match = patterns["LEFTPARENTHESIS"].match(expression, index + 1)
-                        if paren_match:
-                            tokens.append(("LEFTPARENTHESIS", "("))
-                            tokens.append(("NUMBER", "0"))
-                            tokens.append(("OP", "-"))
-                            index += 1
-                            matched = True
-                            break
+                        tokens.append(("NUMBER", "0"))
 
                 # Normal case
                 tokens.append((token, characters))
