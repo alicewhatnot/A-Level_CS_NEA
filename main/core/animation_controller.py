@@ -1,5 +1,6 @@
 import pygame
 from core.ast import copyAST
+from core.ast import containsTrigFunction
 from core.function import Function
 from core.modify_function import DifferentiateFunction
 from core.queue import Queue
@@ -90,7 +91,7 @@ class AnimationController:
 
             # Draw original and current function
             self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(),
-                                            color_override=(150,150,150), use_degrees=self.use_degrees)
+                                            colour_override=(150,150,150), use_degrees=self.use_degrees)
             self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
 
             # Don't leave gap if paused
@@ -117,7 +118,7 @@ class AnimationController:
                     self.graph_plotter.drawAll(screen, dual_view=True, top_function=top_func, bottom_function=bottom_func, use_degrees=self.use_degrees)
                 else:
                     # Draw gray old function and the current transformed function
-                    self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees)
+                    self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), colour_override=(150,150,150), use_degrees=self.use_degrees)
                     self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
             else:
                 # If no function then draw whatever is in graph plotter
@@ -130,7 +131,10 @@ class AnimationController:
         # Make sure the progress doesn't leave 0-1
         progress_safe = max(0.0, min(progress, 1.0))
 
-        if self.use_degrees and self.transformation.getType() == "shift" and self.transformation.getAxis() == 'x':
+        if (self.use_degrees 
+            and self.transformation.getType() == "shift" 
+            and self.transformation.getAxis() == 'x'
+            and containsTrigFunction(self.base_function.getFunction())):
             self.transformation.convertToRad()
             
         # Animates shifts stretches and reflections 
@@ -154,13 +158,13 @@ class AnimationController:
 
             # Draw the final frame for the first tick of the gap
             self.graph_plotter.drawFunction(
-                screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees
+                screen, self.graph_plotter.getBaseFunction(), colour_override=(150,150,150), use_degrees=self.use_degrees
             )
             self.graph_plotter.drawFunction(screen, self.current_function, use_degrees=self.use_degrees)
             return
 
         # Draw intermediate frame of gray original and intermediate animated function
-        self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), color_override=(150,150,150), use_degrees=self.use_degrees)
+        self.graph_plotter.drawFunction(screen, self.graph_plotter.getBaseFunction(), colour_override=(150,150,150), use_degrees=self.use_degrees)
         self.graph_plotter.drawFunction(screen, intermediate_function, use_degrees=self.use_degrees)
 
     # Specific method for differentiating

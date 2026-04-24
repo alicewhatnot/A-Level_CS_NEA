@@ -83,7 +83,7 @@ class GraphPlotter:
                     use_degrees=use_degrees
                 )
 
-    def drawFunction(self, screen, function_object, color_override=None, y_offset=0, graph_height=None, use_degrees=False):
+    def drawFunction(self, screen, function_object, colour_override=None, y_offset=0, graph_height=None, use_degrees=False):
         """
         Draws a given function
         Takes colour override, y offset and graph height if required
@@ -100,7 +100,7 @@ class GraphPlotter:
                 return
             variable = function_object.getFunctionVar()
             # Override to gray if needed
-            colour = color_override or function_object.getColour()
+            colour = colour_override or function_object.getColour()
 
             # Define graph drawing area and scale        
             graph_left = SIDEBAR_WIDTH
